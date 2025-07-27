@@ -1,0 +1,170 @@
+\documentclass[11pt,a4paper]{article}
+
+% Essential packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{physics}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+% Page geometry
+\geometry{
+    top=2.5cm,
+    bottom=2.5cm,
+    left=2.5cm,
+    right=2.5cm,
+    headheight=14pt
+}
+
+% Colors
+\definecolor{leshouches}{RGB}{25,55,95}
+\definecolor{lightgray}{RGB}{240,240,240}
+
+% Header and footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{leshouches}{\small\textsc{Les Houches École de Physique}}}
+\fancyhead[R]{\textcolor{leshouches}{\small Lecture \thelecturenumber}}
+\fancyfoot[C]{\textcolor{leshouches}{\thepage}}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{leshouches}\leaders\hrule height \headrulewidth\hfill}}
+
+% Section formatting
+\titleformat{\section}
+{\Large\bfseries\color{leshouches}}
+{\thesection}{1em}{}
+
+\titleformat{\subsection}
+{\large\bfseries\color{leshouches}}
+{\thesubsection}{1em}{}
+
+% Theorem environments
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem*{remark}{Remark}
+
+% Custom commands
+\newcommand{\lecturetitle}[1]{\def\@lecturetitle{#1}}
+\newcommand{\lecturer}[1]{\def\@lecturer{#1}}
+\newcommand{\lecturedate}[1]{\def\@lecturedate{#1}}
+\newcommand{\lecturenumber}[1]{\def\@lecturenumber{#1}\def\thelecturenumber{#1}}
+
+% Default values
+\lecturetitle{Lecture Title}
+\lecturer{Lecturer Name}
+\lecturedate{\today}
+\lecturenumber{1}
+
+% Title formatting
+\renewcommand{\maketitle}{
+    \begin{center}
+        {\Large\textcolor{leshouches}{\textbf{Les Houches École de Physique}}}\\[0.5em]
+        {\large Session 2025}\\[1.5em]
+        {\huge\textbf{\@lecturetitle}}\\[0.5em]
+        {\large Lecture \@lecturenumber}\\[1em]
+        {\large\textit{\@lecturer}}\\[0.5em]
+        {\@lecturedate}
+    \end{center}
+    \vspace{1em}
+    \hrule
+    \vspace{1.5em}
+}
+
+% Hyperref setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=leshouches,
+    citecolor=leshouches,
+    urlcolor=leshouches,
+    pdftitle={Les Houches Lecture Notes},
+    pdfauthor={\@lecturer}
+}
+
+% Document begins here
+\begin{document}
+
+% Set lecture information
+\lecturetitle{Introduction to Quantum Field Theory}
+\lecturer{Prof. Example}
+\lecturedate{July 27, 2025}
+\lecturenumber{1}
+
+\maketitle
+
+\section{Introduction}
+
+These lecture notes provide an introduction to the fundamental concepts of quantum field theory as presented at the Les Houches École de Physique. The material covered includes the canonical formulation, path integral methods, and applications to particle physics.
+
+\section{Classical Field Theory}
+
+We begin with the classical theory of fields. Consider a scalar field $\phi(x)$ with Lagrangian density:
+\begin{equation}
+    \mathcal{L} = \frac{1}{2}\partial_\mu\phi\partial^\mu\phi - \frac{1}{2}m^2\phi^2 - V(\phi)
+\end{equation}
+
+The Euler-Lagrange equation yields the equation of motion:
+\begin{equation}
+    \left(\partial_\mu\partial^\mu + m^2\right)\phi + \frac{\partial V}{\partial \phi} = 0
+\end{equation}
+
+\begin{definition}
+A \emph{classical field} is a function $\phi: \mathbb{R}^{3,1} \to \mathbb{R}$ (or $\mathbb{C}$) that satisfies the field equations derived from an action principle.
+\end{definition}
+
+\subsection{Symmetries and Conservation Laws}
+
+Noether's theorem establishes a correspondence between continuous symmetries and conserved quantities. For a translation symmetry $x^\mu \to x^\mu + a^\mu$, the conserved current is the energy-momentum tensor:
+\begin{equation}
+    T^{\mu\nu} = \frac{\partial \mathcal{L}}{\partial(\partial_\mu\phi)}\partial^\nu\phi - \eta^{\mu\nu}\mathcal{L}
+\end{equation}
+
+\begin{theorem}[Noether's Theorem]
+Every differentiable symmetry of the action corresponds to a conserved current.
+\end{theorem}
+
+\section{Canonical Quantization}
+
+The transition from classical to quantum field theory is achieved through canonical quantization. We promote the field $\phi(x)$ and its conjugate momentum $\pi(x) = \frac{\partial\mathcal{L}}{\partial\dot{\phi}}$ to operators satisfying canonical commutation relations:
+\begin{equation}
+    [\hat{\phi}(\mathbf{x},t), \hat{\pi}(\mathbf{y},t)] = i\hbar\delta^3(\mathbf{x}-\mathbf{y})
+\end{equation}
+
+\begin{remark}
+The equal-time commutation relations are the field theory analog of the canonical commutation relations $[x,p] = i\hbar$ in quantum mechanics.
+\end{remark}
+
+\section{Path Integral Formulation}
+
+An alternative approach to quantization uses Feynman's path integral method. The transition amplitude between field configurations is:
+\begin{equation}
+    \langle\phi_f|e^{-iHt/\hbar}|\phi_i\rangle = \int \mathcal{D}\phi \, e^{iS[\phi]/\hbar}
+\end{equation}
+
+where $S[\phi] = \int d^4x \, \mathcal{L}(\phi,\partial\phi)$ is the action functional.
+
+\section{Exercises}
+
+\begin{enumerate}
+    \item Derive the Klein-Gordon equation from the Lagrangian density for a free scalar field.
+    \item Show that the energy-momentum tensor is symmetric for a scalar field theory.
+    \item Compute the Feynman propagator for the free scalar field in momentum space.
+\end{enumerate}
+
+\section{References}
+
+\begin{itemize}
+    \item Peskin, M.E. and Schroeder, D.V., \textit{An Introduction to Quantum Field Theory}
+    \item Zee, A., \textit{Quantum Field Theory in a Nutshell}
+    \item Weinberg, S., \textit{The Quantum Theory of Fields}
+\end{itemize}
+
+\end{document}
