@@ -30,7 +30,7 @@
 % Header and footer
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\textcolor{leshouches}{\small\textsc{Les Houches École de Physique}}}
+\fancyhead[L]{\textcolor{leshouches}{\small\textsc{Les Houches School of Physics}}}
 \fancyhead[R]{\textcolor{leshouches}{\small Lecture \thelecturenumber}}
 \fancyfoot[C]{\textcolor{leshouches}{\thepage}}
 \renewcommand{\headrulewidth}{0.5pt}
@@ -68,8 +68,8 @@
 % Title formatting
 \renewcommand{\maketitle}{
     \begin{center}
-        {\Large\textcolor{leshouches}{\textbf{Les Houches École de Physique}}}\\[0.5em]
-        {\large Session 2025}\\[1.5em]
+        {\Large\textcolor{leshouches}{\textbf{Les Houches School of Physics}}}\\[0.5em]
+        {\large Summer School on Dark Universe, 2025}\\[1.5em]
         {\huge\textbf{\@lecturetitle}}\\[0.5em]
         {\large Lecture \@lecturenumber}\\[1em]
         {\large\textit{\@lecturer}}\\[0.5em]
@@ -104,7 +104,14 @@
 
 \section{Introduction}
 
-These lecture notes provide a one-hour introduction to Simulation-Based Inference (SBI) for cosmological data analysis at the Les Houches École de Physique Dark Universe Summer School. We explore how neural networks enable Bayesian inference when traditional likelihood-based approaches become intractable.
+Simulation-Based Inference (SBI) addresses a fundamental challenge in modern cosmological data analysis: performing Bayesian inference when the likelihood function $p(d|\theta)$ is intractable or computationally prohibitive to evaluate. Traditional approaches rely on analytical likelihood expressions or approximations that become inadequate for complex, high-dimensional data such as cosmic web fields, galaxy clustering, or gravitational lensing maps.
+
+The key insight of SBI is to \textbf{replace explicit likelihood} evaluations required by traditional MCMC, \textbf{with an implicit likelihood learned from simulations}. In other words, rather than deriving the likelihood of the data $p(d|\theta)$ analytically, simulations can be used to generate synthetic training data that captures the relationship between parameters $\theta$ and observations $d$. Neural networks can then be used to approximate the relevant distributions (whether the posterior $p(\theta|d)$, likelihood $p(d|\theta)$, or likelihood ratios) directly from this simulation data.
+
+This approach has proven particularly powerful in cosmology, where sophisticated N-body simulations and hydrodynamical codes can generate realistic synthetic observations, but the underlying physics is too complex for tractable likelihood expressions. SBI enables inference over high-dimensional parameter spaces using the full information content of complex datasets, moving beyond traditional summary statistics.
+
+In these lecture notes, we will cover the connection between SBI and other forms of Bayesian inference, the theoretical foundations of neural density estimation powering SBI, and its practical applications in cosmological inference problems. We will also discuss the challenges and best practices for implementing SBI in real-world scenarios.
+
 
 \section{What Makes SBI Different?}
 

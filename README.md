@@ -1,6 +1,6 @@
 # Simulation-Based Inference for Cosmology
 
-**Lecture at the Dark Universe Summer School, Les Houches 2025**
+**Lecture at the Les Houches School of Physics Summer School on Dark Universe, 2025**
 
 <p align="left">
   <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">
@@ -11,7 +11,7 @@
   </a>
 </p>
 
-This repository contains lecture materials for a one-hour introduction to Simulation-Based Inference (SBI) in cosmology, presented at the [Dark Universe Summer School](https://indico.iap.fr/event/25/) at École de Physique des Houches, France.
+This repository contains lecture materials for a one-hour introduction to Simulation-Based Inference (SBI) in cosmology, presented at the [Les Houches Summer School on Dark Universe](https://indico.iap.fr/event/25/) at the Les Houches School of Physics, France.
 
 ## 📚 Lecture Overview
 
