@@ -1,106 +1,109 @@
-\documentclass[11pt,a4paper]{article}
+% =========================================================================
+% SciPost LaTeX template
+% Version 2024-07
+%
+% Submissions to SciPost Journals should make use of this template.
+%
+% INSTRUCTIONS: simply look for the `TODO:' tokens and adapt your file.
+% ========================================================================
 
-% Essential packages
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[english]{babel}
-\usepackage{geometry}
-\usepackage{amsmath,amssymb,amsthm}
-\usepackage{physics}
-\usepackage{graphicx}
-\usepackage{xcolor}
-\usepackage{fancyhdr}
-\usepackage{titlesec}
-\usepackage{hyperref}
-\usepackage{cleveref}
+\documentclass{SciPost}
 
-% Page geometry
-\geometry{
-    top=2.5cm,
-    bottom=2.5cm,
-    left=2.5cm,
-    right=2.5cm,
-    headheight=24pt
-}
+% Prevent all line breaks in inline equations.
+\binoppenalty=10000
+\relpenalty=10000
 
-% Colors
-\definecolor{leshouches}{RGB}{25,55,95}
-\definecolor{lightgray}{RGB}{240,240,240}
-
-% Header and footer
-\pagestyle{fancy}
-\fancyhf{}
-\fancyhead[L]{\textcolor{leshouches}{\small\textsc{Les Houches School of Physics}}}
-\fancyhead[R]{\textcolor{leshouches}{\small Lecture \thelecturenumber}}
-\fancyfoot[C]{\textcolor{leshouches}{\thepage}}
-\renewcommand{\headrulewidth}{0.5pt}
-\renewcommand{\headrule}{\hbox to\headwidth{\color{leshouches}\leaders\hrule height \headrulewidth\hfill}}
-
-% Section formatting
-\titleformat{\section}
-{\Large\bfseries\color{leshouches}}
-{\thesection}{1em}{}
-
-\titleformat{\subsection}
-{\large\bfseries\color{leshouches}}
-{\thesubsection}{1em}{}
-
-% Theorem environments
-\theoremstyle{definition}
-\newtheorem{definition}{Definition}[section]
-\newtheorem{theorem}{Theorem}[section]
-\newtheorem{lemma}{Lemma}[section]
-\newtheorem*{remark}{Remark}
-
-% Custom commands
-\makeatletter
-\newcommand{\lecturetitle}[1]{\gdef\@lecturetitle{#1}}
-\newcommand{\lecturer}[1]{\gdef\@lecturer{#1}}
-\newcommand{\lecturedate}[1]{\gdef\@lecturedate{#1}}
-\newcommand{\lecturenumber}[1]{\gdef\@lecturenumber{#1}\gdef\thelecturenumber{#1}}
-
-% Default values
-\gdef\@lecturetitle{Lecture Title}
-\gdef\@lecturer{Lecturer Name}
-\gdef\@lecturedate{\today}
-\gdef\@lecturenumber{1}
-
-% Title formatting
-\renewcommand{\maketitle}{
-    \begin{center}
-        {\Large\textcolor{leshouches}{\textbf{Les Houches School of Physics}}}\\[0.5em]
-        {\large Summer School on Dark Universe, 2025}\\[1.5em]
-        {\huge\textbf{\@lecturetitle}}\\[0.5em]
-        {\large Lecture \@lecturenumber}\\[1em]
-        {\large\textit{\@lecturer}}\\[0.5em]
-        {\@lecturedate}
-    \end{center}
-    \vspace{1em}
-    \hrule
-    \vspace{1.5em}
-}
-\makeatother
-
-% Hyperref setup
 \hypersetup{
-    colorlinks=true,
-    linkcolor=leshouches,
-    citecolor=leshouches,
-    urlcolor=leshouches,
-    pdftitle={Simulation-Based Inference for Cosmology - Les Houches 2025},
-    pdfauthor={François Lanusse, CNRS/CEA Paris-Saclay}
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
 }
 
-% Document begins here
+\usepackage[bitstream-charter]{mathdesign}
+\urlstyle{same}
+
+% Fix \cal and \mathcal characters look (so it's not the same as \mathscr)
+\DeclareSymbolFont{usualmathcal}{OMS}{cmsy}{m}{n}
+\DeclareSymbolFontAlphabet{\mathcal}{usualmathcal}
+
+\fancypagestyle{SPstyle}{
+\fancyhf{}
+\lhead{\colorbox{scipostblue}{\bf \color{white} ~SciPost Physics Lecture Notes }}
+\rhead{{\bf \color{scipostdeepblue} ~Submission }}
+\renewcommand{\headrulewidth}{1pt}
+\fancyfoot[C]{\textbf{\thepage}}
+}
+
 \begin{document}
 
-% Set lecture information
-\lecturetitle{Simulation-Based Inference for Cosmology}
-\lecturer{François Lanusse, CNRS/CEA Paris-Saclay}
-\lecturedate{Summer 2025}
-\lecturenumber{1}
+\pagestyle{SPstyle}
 
-\maketitle
+\begin{center}{\Large \textbf{\color{scipostdeepblue}{
+  Simulation-Based Inference for Cosmology
+}}}\end{center}
+
+\begin{center}\textbf{
+% Write the author list here. 
+% Use (full) first name (+ middle name initials) + surname format.
+% Separate subsequent authors by a comma, omit comma and use "and" for the last author.
+% Mark the corresponding author(s) with a superscript symbol in this order
+% \star, \dagger, \ddagger, \circ, \S, \P, \parallel, ...
+François Lanusse\textsuperscript{1$\star$}
+}\end{center}
+
+\begin{center}
+% Write all affiliations here.
+% Format: institute, city, country
+{\bf 1} Université Paris-Saclay, Université Paris Cité, CEA, CNRS, AIM, 91191, Gif-sur-Yvette, France
+% Provide email address of corresponding author(s)
+\\[\baselineskip]
+$\star$ \href{mailto:francois.lanusse@cnrs.fr}{\small francois.lanusse@cnrs.fr}
+\end{center}
+
+
+\section*{\color{scipostdeepblue}{Abstract}}
+\textbf{\boldmath{
+Modern cosmological inference faces a fundamental challenge: extracting scientific insights from complex, high-dimensional datasets when traditional likelihood-based methods become intractable. This lecture introduces Simulation-Based Inference (SBI), a paradigm that replaces analytical likelihood evaluation with implicit distributions learned from forward simulations. We establish the theoretical foundations distinguishing explicit inference (where $p(d|\theta)$ can be evaluated) from implicit inference (where only samples from the joint distribution $p(\theta, d)$ are accessible through simulations). The lecture covers neural density estimation techniques—from Mixture Density Networks to Normalizing Flows—that enable learning complex probability distributions from simulation data. We demonstrate how these methods transform cosmological parameter estimation from summary statistic compression to full-field analysis, preserving complete information content while handling non-differentiable physics codes. Practical considerations for robust SBI implementation in cosmology are discussed, emphasizing validation strategies and common pitfalls when bridging simulations and observations.
+}}
+
+\vspace{\baselineskip}
+
+%%%%%%%%%% BLOCK: Copyright information
+% This block will be filled during the proof stage, and finilized just before publication.
+% It exists here only as a placeholder, and should not be modified by authors.
+\noindent\textcolor{white!90!black}{%
+\fbox{\parbox{0.975\linewidth}{%
+\textcolor{white!40!black}{\begin{tabular}{lr}%
+  \begin{minipage}{0.6\textwidth}%
+    {\small Copyright attribution to authors. \newline
+    This work is a submission to SciPost Physics Lecture Notes. \newline
+    License information to appear upon publication. \newline
+    Publication information to appear upon publication.}
+  \end{minipage} & \begin{minipage}{0.4\textwidth}
+    {\small Received Date \newline Accepted Date \newline Published Date}%
+  \end{minipage}
+\end{tabular}}
+}}
+}
+%%%%%%%%%% BLOCK: Copyright information
+
+
+%%%%%%%%%% TODO: LINENO
+% For convenience during refereeing we turn on line numbers:
+\linenumbers
+% You should run LaTeX twice in order for the line numbers to appear.
+%%%%%%%%%% END TODO: LINENO
+
+%%%%%%%%%% TODO: TOC 
+% Guideline: if your paper is longer that 6 pages, include a TOC
+% To remove the TOC, simply cut the following block
+\vspace{10pt}
+\noindent\rule{\textwidth}{1pt}
+\tableofcontents
+\noindent\rule{\textwidth}{1pt}
+\vspace{10pt}
+%%%%%%%%%% END TODO: TOC
 
 \section*{Introduction}
 
@@ -254,76 +257,96 @@ The shift to implicit inference represents more than a technical solution to com
 
 \section{Neural Density Estimation}
 
-The core challenge in implicit inference is learning probability distributions from samples rather than analytical expressions. This section introduces the neural network machinery that enables SBI by approximating complex, high-dimensional probability densities from simulation data.
+Having established that implicit inference transforms an intractable analytical problem into a supervised learning problem from simulation samples, we now confront the core technical challenge: \textbf{how do we learn probability distributions when we only have access to samples?} This question lies at the heart of making SBI practical, as our ability to perform Bayesian inference depends entirely on how well we can approximate the implicit distributions defined by our simulators.
 
 \subsection{The Density Estimation Problem}
 
-In traditional statistics, we often work with known parametric families (e.g., Gaussian, exponential) where the functional form is specified and we only need to estimate parameters. For SBI, we face a fundamentally different challenge: **learning the shape of unknown probability distributions** from samples generated by black-box simulators.
+The transition from explicit to implicit inference fundamentally changes the nature of our computational task. In explicit inference, we derive analytical expressions for $p(d|\theta)$ based on physical models and statistical assumptions. In implicit inference, we face a radically different situation: we have samples $\{(\theta_i, d_i)\}_{i=1}^N$ generated by running our simulator, but \textbf{no functional form} for the underlying distributions.
 
-Given samples $\{x_i\}_{i=1}^N$ drawn from an unknown distribution $p(x)$, density estimation seeks to construct an approximation $\hat{p}(x)$ that captures the underlying probability structure. In the SBI context, these samples come from running forward simulations: $x_i = \mathcal{S}(\theta_i, \epsilon_i)$ where $\theta_i$ are sampled parameters and $\epsilon_i$ represent simulation randomness.
+This creates a profound challenge that traditional statistical methods were not designed to address. Classical density estimation techniques like kernel density estimation or histograms work well in low dimensions but suffer from the \textbf{curse of dimensionality} when applied to the high-dimensional parameter and data spaces typical in cosmology. A weak lensing convergence map might have millions of pixels, while cosmological parameter spaces often exceed 20 dimensions when including nuisance parameters. In such spaces, the number of samples required for traditional methods grows exponentially, quickly exceeding any practical computational budget.
 
-\subsection{Neural Networks as Universal Approximators}
+The key insight that makes neural density estimation viable is recognizing that \textbf{cosmological distributions often lie on lower-dimensional manifolds} embedded in high-dimensional spaces. The cosmic web, for instance, exhibits characteristic patterns—filaments, voids, clusters—that represent a tiny fraction of all possible matter distributions. Similarly, the relationship between cosmological parameters and observables is highly structured, constrained by the physics of structure formation. Neural networks excel at learning these implicit lower-dimensional structures from data.
 
-Neural networks provide the flexibility needed for this task through their **universal approximation capabilities**. A feedforward neural network with sufficient width can approximate any continuous function to arbitrary precision, making them natural candidates for density estimation.
+\subsection{Neural Networks as Universal Function Approximators}
 
-The basic building block is a multilayer perceptron:
+The theoretical foundation for using neural networks in density estimation rests on the \textbf{universal approximation theorem}, which guarantees that feedforward neural networks with sufficient width can approximate any continuous function to arbitrary precision. This result, proven independently by Cybenko (1989) and Hornik (1991), provides the mathematical justification for believing that neural networks can learn the complex mappings required for SBI.
+
+A standard feedforward neural network transforms an input $x$ through a sequence of linear transformations and nonlinear activations:
 \begin{equation}
     f(x) = W_L \sigma(W_{L-1} \sigma(\cdots \sigma(W_1 x + b_1) \cdots) + b_{L-1}) + b_L
 \end{equation}
-where $W_\ell$ are weight matrices, $b_\ell$ are bias vectors, and $\sigma(\cdot)$ is a nonlinear activation function. The network learns optimal parameters through gradient-based optimization on training data.
+where $W_\ell$ are weight matrices, $b_\ell$ are bias vectors, and $\sigma(\cdot)$ is a nonlinear activation function (typically ReLU, tanh, or sigmoid). The parameters $\{W_\ell, b_\ell\}$ are learned by minimizing a loss function through gradient-based optimization.
 
-For density estimation, the key insight is to use neural networks to parameterize probability distributions, then train them to maximize the likelihood of observed samples.
+However, the universal approximation theorem alone is insufficient for density estimation. The crucial additional insight is that \textbf{we can use neural networks to parameterize probability distributions} rather than just deterministic functions. Instead of directly outputting density values, neural networks can output the parameters of probability distributions, which can then be trained using maximum likelihood estimation on our simulation samples.
+
+This shift from function approximation to distribution parameterization opens the door to a rich variety of architectures, each designed to capture different aspects of complex probability distributions. The evolution of these methods—from simple mixture models to sophisticated normalizing flows—reflects the field's growing understanding of how to leverage neural network flexibility while maintaining the probabilistic rigor required for Bayesian inference.
 
 \subsection{Mixture Density Networks (MDNs)}
 
-The conceptually simplest approach to neural density estimation uses **mixture models** where neural networks predict the parameters of a mixture of simple distributions. For a mixture of $K$ Gaussians:
+The most natural starting point for neural density estimation builds on the familiar concept of mixture models. Rather than attempting to learn arbitrary probability distributions directly, we begin with the assumption that \textbf{complex distributions can be decomposed into combinations of simple, well-understood components}. This approach, known as Mixture Density Networks (MDNs), represents the earliest attempt to marry the flexibility of neural networks with the mathematical rigor of probability theory.
+
+The core insight behind MDNs is that neural networks excel at learning complex conditional relationships between inputs and outputs. In the SBI context, if we have simulation pairs $\{(\theta_i, d_i)\}_{i=1}^N$, we can train a neural network to predict the parameters of a probability distribution over $d$ given $\theta$. The simplest choice is a mixture of Gaussians:
 
 \begin{equation}
-    p(x|\theta) = \sum_{k=1}^K \pi_k(\theta) \mathcal{N}(x | \mu_k(\theta), \sigma_k(\theta))
+    p(d|\theta) = \sum_{k=1}^K \pi_k(\theta) \mathcal{N}(d | \mu_k(\theta), \Sigma_k(\theta))
 \end{equation}
 
-Here, neural networks $\pi_k(\cdot)$, $\mu_k(\cdot)$, and $\sigma_k(\cdot)$ output the mixture weights, means, and standard deviations respectively as functions of conditioning variables $\theta$. The networks are trained by maximizing the log-likelihood:
+Here, three separate neural networks (or different output heads of a single network) learn to predict the mixture weights $\pi_k(\theta)$, means $\mu_k(\theta)$, and covariance matrices $\Sigma_k(\theta)$ as functions of the cosmological parameters $\theta$. The mixture weights must satisfy $\sum_k \pi_k(\theta) = 1$ and $\pi_k(\theta) \geq 0$, typically enforced through a softmax activation. The covariance matrices must be positive definite, often parameterized through Cholesky decomposition or diagonal approximations.
+
+Training proceeds by maximizing the log-likelihood of the observed simulation data:
 \begin{equation}
-    \mathcal{L} = \sum_{i=1}^N \log p(x_i|\theta_i)
+    \mathcal{L} = \sum_{i=1}^N \log p(d_i|\theta_i) = \sum_{i=1}^N \log \sum_{k=1}^K \pi_k(\theta_i) \mathcal{N}(d_i | \mu_k(\theta_i), \Sigma_k(\theta_i))
 \end{equation}
 
-**Advantages**: Interpretable components, stable training, works well for unimodal or simple multimodal distributions.
+The power of this approach lies in its \textbf{conceptual simplicity and interpretability}. Each Gaussian component can potentially represent a different "mode" of the cosmic web—one component might capture void-dominated regions, another might represent filamentary structures, and a third could model cluster-rich areas. The mixture weights tell us the relative prevalence of each mode as a function of cosmological parameters.
 
-**Limitations**: Limited flexibility for complex distributions, requires manual specification of mixture components $K$.
+However, this interpretability comes at a cost. The fundamental limitation of MDNs emerges from the \textbf{finite mixture assumption}: real cosmological distributions often exhibit complexity that cannot be adequately captured by a small number of Gaussian components. Consider the distribution of matter in a cosmic web simulation—the intricate network of filaments, the complex shapes of voids, the hierarchical structure of dark matter halos. These features require either an impractically large number of mixture components or acceptance of significant approximation errors.
+
+Moreover, the choice of $K$ (the number of mixture components) introduces a \textbf{model selection problem} that lacks a principled solution. Too few components lead to underfitting, while too many can cause overfitting and computational instability. This tension between model complexity and tractability motivated the development of more flexible approaches that could adapt their complexity to the data rather than requiring it to be specified a priori.
 
 \subsection{Normalizing Flows}
 
-For greater flexibility, **normalizing flows** learn invertible transformations between a simple base distribution (e.g., standard Gaussian) and the target distribution. The key idea is to apply a sequence of invertible functions $f = f_L \circ \cdots \circ f_1$ that transform samples $z \sim p_0(z)$ to $x = f(z)$.
+The limitations of MDNs—their reliance on fixed architectural choices and finite mixture assumptions—motivated a more fundamental approach to neural density estimation. Rather than constraining ourselves to specific parametric families, what if we could \textbf{learn arbitrary transformations} that map complex distributions to simple ones? This insight gave birth to normalizing flows, a revolutionary approach that transforms the density estimation problem into learning invertible mappings.
 
-The probability density follows from the change of variables formula:
+The conceptual breakthrough underlying normalizing flows rests on a simple mathematical observation: if we can construct an invertible transformation $f$ that maps samples from a complex distribution $p(x)$ to samples from a simple base distribution $p_0(z)$ (typically standard Gaussian), then we can compute exact densities using the change of variables formula from probability theory. This transforms the intractable problem of learning arbitrary densities into the more manageable problem of learning invertible functions.
+
+Consider a sequence of invertible transformations $f = f_L \circ f_{L-1} \circ \cdots \circ f_1$ that maps samples $z \sim p_0(z)$ from a simple base distribution to samples $x = f(z)$ from our target distribution. The probability density of $x$ follows directly from the change of variables theorem:
+
 \begin{equation}
-    p(x) = p_0(z) \left| \det \frac{\partial f^{-1}}{\partial x} \right| = p_0(f^{-1}(x)) \left| \det \frac{\partial f^{-1}}{\partial x} \right|
+    p(x) = p_0(f^{-1}(x)) \left| \det \frac{\partial f^{-1}}{\partial x} \right|
 \end{equation}
 
-Each transformation $f_i$ must be invertible with tractable Jacobian determinant. Common architectures include:
-\begin{itemize}
-    \item **Coupling flows**: Split dimensions and use neural networks to transform subsets
-    \item **Autoregressive flows**: Transform dimensions sequentially using autoregressive dependencies
-    \item **Continuous normalizing flows**: Use neural ODEs for infinite-depth transformations
-\end{itemize}
+This elegant mathematical relationship provides the foundation for training normalizing flows. Given simulation data $\{x_i\}_{i=1}^N$, we can train the parameters of the transformations $\{f_\ell\}$ by maximizing the log-likelihood:
 
-**Advantages**: High expressiveness, exact likelihood computation, efficient sampling via forward pass.
+\begin{equation}
+    \mathcal{L} = \sum_{i=1}^N \log p(x_i) = \sum_{i=1}^N \left[ \log p_0(f^{-1}(x_i)) + \log \left| \det \frac{\partial f^{-1}}{\partial x} \right|_{x=x_i} \right]
+\end{equation}
 
-**Limitations**: Architectural constraints for invertibility, computational cost of Jacobian determinants.
+The power of this approach lies in its theoretical generality: \textbf{any invertible transformation can, in principle, be learned}. This means that normalizing flows can capture arbitrarily complex distributions, including those with intricate correlation structures, multiple modes, heavy tails, and sharp boundaries—all features commonly found in cosmological simulations.
 
-\subsection{Advanced Methods}
+However, the requirement for invertibility with tractable Jacobian determinants imposes significant architectural constraints. The transformation must be designed such that: (1) the inverse $f^{-1}$ can be computed efficiently, (2) the Jacobian determinant can be evaluated without excessive computational cost, and (3) the function has sufficient expressiveness to capture complex distributions.
 
-Recent developments have expanded the toolkit for neural density estimation:
+These constraints led to several ingenious architectural solutions. \textbf{Coupling flows} address the invertibility requirement by splitting the input dimensions and using one subset to transform the other through additive or affine transformations. \textbf{Autoregressive flows} ensure invertibility by making each output dimension depend only on previous dimensions, allowing sequential computation of both forward and inverse transformations. \textbf{Continuous normalizing flows} use neural ordinary differential equations (ODEs) to define infinitely deep transformations with tractable Jacobians.
 
-\begin{itemize}
-    \item **Score matching**: Instead of learning $p(x)$ directly, learn the score function $s(x) = \nabla_x \log p(x)$. The score characterizes the distribution and can be learned without normalization constants.
-    
-    \item **Diffusion models**: Model the gradual denoising process from pure noise to data samples. These have shown remarkable success in generative modeling and are increasingly used for density estimation.
-    
-    \item **Neural spline flows**: Use neural networks to parameterize monotonic spline functions, providing a good balance between flexibility and computational efficiency.
-\end{itemize}
+The success of normalizing flows in cosmological applications stems from their ability to capture the \textbf{non-linear correlations and complex geometries} inherent in cosmic structure formation. For instance, the relationship between cosmological parameters and weak lensing maps involves intricate dependencies mediated by the non-linear growth of structure, baryonic feedback, and projection effects. Traditional methods like MDNs struggle with such complexity, while normalizing flows can learn these relationships directly from simulation data.
 
-The choice of method depends on the specific requirements: MDNs for interpretability, normalizing flows for exact likelihoods, and advanced methods for maximum flexibility. In the next section, we explore how these density estimation techniques enable the three main approaches to SBI.
+Yet this flexibility comes with computational costs. The requirement to evaluate Jacobian determinants—especially for high-dimensional problems—can make normalizing flows significantly more expensive than simpler alternatives. Moreover, ensuring numerical stability during training requires careful architectural design and regularization techniques. These considerations led researchers to explore even more flexible approaches that could capture distributional complexity without the rigid constraints imposed by invertibility requirements.
+
+\subsection{Beyond Explicit Density Models}
+
+While MDNs and normalizing flows represent major advances in neural density estimation, both approaches share a fundamental assumption: that we need to explicitly model probability densities $p(x)$. This assumption, though natural, is not always necessary for statistical inference. Recent developments have challenged this paradigm by recognizing that \textbf{many inference tasks can be performed without explicit density evaluation}, leading to methods that sidestep some of the most challenging aspects of density modeling.
+
+The limitations that motivated these advanced approaches are subtle but significant. MDNs, despite their interpretability, struggle with high-dimensional distributions and require careful tuning of mixture complexity. Normalizing flows, while theoretically powerful, impose architectural constraints that can limit their practical applicability and make them computationally expensive for very high-dimensional problems. Moreover, both approaches require careful handling of numerical stability issues when dealing with distributions that have sharp boundaries or extreme aspect ratios—situations commonly encountered in cosmological simulations.
+
+\textbf{Score matching} represents a radical departure from explicit density modeling by focusing on the score function $s(x) = \nabla_x \log p(x)$ rather than the density itself. The key insight is that the score function characterizes a probability distribution uniquely, but can often be learned more easily than the density. Crucially, the score function avoids the normalization constant that makes density estimation challenging, since $\nabla_x \log p(x) = \nabla_x \log \tilde{p}(x)$ for any unnormalized density $\tilde{p}(x)$. Training proceeds by matching the learned score function to the true score, which can be estimated from data without knowing the underlying density.
+
+\textbf{Diffusion models} take this approach even further by modeling the entire generative process through a gradual denoising procedure. Instead of learning a single transformation from noise to data (as in normalizing flows), diffusion models learn to reverse a forward noising process that gradually transforms data samples into pure noise. This approach has shown remarkable success in generative modeling applications and is increasingly being adapted for density estimation tasks in scientific applications.
+
+\textbf{Neural spline flows} represent a hybrid approach that maintains the invertibility requirements of normalizing flows while using more flexible and computationally efficient transformations. By parameterizing transformations as monotonic spline functions rather than general neural networks, these methods achieve a favorable balance between expressiveness and computational cost.
+
+These advanced methods reflect the field's growing sophistication in recognizing that \textbf{different inference problems may require different distributional representations}. For applications requiring exact likelihood evaluation (such as model comparison), normalizing flows remain the method of choice. For scenarios where interpretability is paramount, MDNs offer unmatched clarity. For complex, high-dimensional problems where computational efficiency is critical, score-based methods may provide the best solution.
+
+The evolution from MDNs to normalizing flows to score-based methods illustrates a broader pattern in machine learning: the progression from constrained, interpretable models to flexible, general-purpose approaches, and finally to specialized methods tailored for specific problem characteristics. In the context of SBI, this evolution has opened up new possibilities for tackling previously intractable inference problems in cosmology and other scientific domains.
 
 \section{From Density Estimation to Bayesian Inference}
 
@@ -335,10 +358,6 @@ Learn the likelihood $p(x|\theta)$ and use MCMC for posterior sampling.
 
 \subsection{Neural Ratio Estimation (NRE)}
 Learn likelihood ratios $r(x,\theta) = p(x|\theta) / p(x|\theta_0)$ for efficient inference.
-
-\begin{remark}
-The \texttt{sbi} package provides implementations of all these methods with a unified interface.
-\end{remark}
 
 \section{Dimensionality Reduction for SBI}
 
@@ -380,12 +399,96 @@ Key principle: Preserve information relevant for inference while reducing dimens
     \item \texttt{pydelfi}: Density Estimation Likelihood-Free Inference
 \end{itemize}
 
-\subsection{Key References}
-\begin{itemize}
-    \item Cranmer et al. (2020), ``The frontier of simulation-based inference''
-    \item Papamakarios et al. (2019), ``Neural Density Estimation: A Review''
-    \item Alsing \& Wandelt (2019), ``Generalized massive optimal data compression''
-    \item Jeffrey et al. (2020), ``Likelihood-free inference with neural compression''
-\end{itemize}
+
+
+
+
+
+
+\section{Introduction}
+\label{sec:intro}
+% TODO: write your article here.
+The stage is yours. Write your article here.
+The bulk of the paper should be clearly divided into sections with short descriptive titles, including an introduction and a conclusion.
+
+
+
+\section{A Section}
+Use sections to structure your article's presentation.
+
+Equations should be centered; multi-line equations should be aligned.
+\begin{equation}
+H = \sum_{j=1}^N \left[J (S^x_j S^x_{j+1} + S^y_j S^y_{j+1} + \Delta S^z_j S^z_{j+1}) - h S^z_j \right].
+\end{equation}
+
+In the list of references, cited papers \cite{1931_Bethe_ZP_71} should include authors, title, journal reference (journal name, volume number (in bold), start page) and most importantly a DOI link. For a preprint \cite{arXiv:1108.2700}, please include authors, title (please ensure proper capitalization) and arXiv link. If you use BiBTeX with our style file, the right format will be automatically implemented.
+
+All equations and references should be hyperlinked to ensure ease of navigation. This also holds for [sub]sections: readers should be able to easily jump to Section \ref{sec:another}.
+
+\section{Another Section}
+\label{sec:another}
+There is no strict length limitation, but the authors are strongly encouraged to keep contents to the strict minimum necessary for peers to reproduce the research described in the paper.
+
+\subsection{A first subsection}
+You are free to use dividers as you see fit.
+\subsection{A note about figures}
+Figures should only occupy the stricly necessary space, in any case individually fitting on a single page. Each figure item should be appropriately labeled and accompanied by a descriptive caption. {\bf SciPost does not accept creative or promotional figures or artist's impressions}; on the other hand, technical drawings and scientifically accurate representations are encouraged.
+
+
+\section{Conclusion}
+You must include a conclusion.
+
+\section*{Acknowledgements}
+Acknowledgements should follow immediately after the conclusion.
+
+% TODO: include author contributions
+\paragraph{Author contributions}
+This is optional. If desired, contributions should be succinctly described in a single short paragraph, using author initials.
+
+% TODO: include funding information
+\paragraph{Funding information}
+Authors are required to provide funding information, including relevant agencies and grant numbers with linked author's initials. Correctly-provided data will be linked to funders listed in the \href{https://www.crossref.org/services/funder-registry/}{\sf Fundref registry}.
+
+
+\begin{appendix}
+\numberwithin{equation}{section}
+
+\section{First appendix}
+Add material which is better left outside the main text in a series of Appendices labeled by capital letters.
+
+\section{About references}
+Your references should start with the comma-separated author list (initials + last name), the publication title in italics, the journal reference with volume in bold, start page number, publication year in parenthesis, completed by the DOI link (linking must be implemented before publication). If using BiBTeX, please use the style files provided  on \url{https://scipost.org/submissions/author_guidelines}. If you are using our LaTeX template, simply add
+\begin{verbatim}
+\bibliography{your_bibtex_file}
+\end{verbatim}
+at the end of your document. If you are not using our LaTeX template, please still use our bibstyle as
+\begin{verbatim}
+\bibliographystyle{SciPost_bibstyle}
+\end{verbatim}
+in order to simplify the production of your paper.
+\end{appendix}
+
+
+%%%%%%%%% END TODO: CONTENTS
+
+
+%%%%%%%%%% TODO: BIBLIOGRAPHY
+% Provide your bibliography here. You have two options:
+
+%%% FIRST OPTION
+% Write your entries here directly, following the example below, including:
+% Author(s), Title, Journal Ref. with year in parentheses at the end, followed by the DOI number.
+
+%\begin{thebibliography}{99}
+%\bibitem{1931_Bethe_ZP_71} H. A. Bethe, {\it Zur Theorie der Metalle. i. Eigenwerte und Eigenfunktionen der linearen Atomkette}, Zeit. f{\"u}r Phys. {\bf 71}, 205 (1931), \doi{10.1007\%2FBF01341708}.
+%\bibitem{arXiv:1108.2700} P. Ginsparg, {\it It was twenty years ago today... }, \url{http://arxiv.org/abs/1108.2700}.
+%\end{thebibliography}
+
+%%% SECOND OPTION
+% Use your bibtex library, formatted by the SciPost style file.
+\bibliography{SciPost_Example_BiBTeX_File.bib}
+
+%%%%%%%%%% END TODO: BIBLIOGRAPHY
+
 
 \end{document}
