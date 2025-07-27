@@ -195,41 +195,62 @@ Wouldn't it be nice if we could perform Full-Field inference without running int
 
 \subsection{Implicit Inference}
 
-\textbf{Implicit inference} becomes necessary when the forward model cannot be decomposed into tractable probabilistic components, making the likelihood $p(d|\theta)$ effectively unevaluable. This situation arises when simulations involve complex, nonlinear processes that defy analytical description or when computational constraints make likelihood evaluation prohibitively expensive.
+Having established that explicit inference reaches its limits when forward models become too complex to decompose into tractable probabilistic components, we now turn to scenarios where the likelihood $p(d|\theta)$ becomes fundamentally unevaluable. This transition from explicit to implicit inference represents a critical juncture in modern cosmological analysis.
 
-\textbf{The Black-Box Simulation Regime}: Consider a complex forward model $\mathcal{S}(\theta, \epsilon)$ where $\epsilon$ represents stochastic elements that are not tracked or controllable (e.g., random number generator seeds, stochastic subgrid physics implementations, Monte Carlo sampling within the simulation). The relationship between parameters $\theta$ and observations $d$ is implicitly defined through:
+We define \textbf{implicit inference} as any Bayesian inference approach where the likelihood function $p(d|\theta)$ cannot be evaluated directly, but where we can generate samples from the joint distribution $p(\theta, d)$ through forward simulations. In contrast to explicit methods that require point-wise likelihood evaluation, implicit methods work with \textbf{implicit distributions}: probability distributions that are defined through a generative process (such as running a simulation) rather than through an analytical expression that can be evaluated at arbitrary points.
+
+This paradigm becomes necessary when the complexity of our models and simulations precludes explicit inference. This occurs in two main scenarios where the computational or mathematical requirements exceed what explicit methods can handle.
+
+The first challenge arises from \textbf{high-dimensional inference problems}. When dealing with full-field inference in very high dimensions, even explicit hierarchical models like BORG face computational challenges. Sampling efficiently in spaces with millions of latent variables remains difficult, and the required computational resources can become prohibitive.
+
+The second limitation involves \textbf{non-differentiable or intractable forward models}. Many realistic cosmological simulations cannot be easily decomposed into the tractable probabilistic components required for explicit inference. For instance, differentiable models of full hydrodynamical simulations with realistic baryonic feedback do not yet exist, making it impossible to apply gradient-based sampling methods or even evaluate the likelihood function analytically.
+
+\subsubsection{The Fundamental Insight of Simulation-Based Inference}
+
+Faced with these challenges, SBI recognizes a crucial asymmetry: \textbf{while we cannot evaluate} $p(d|\theta)$ \textbf{directly, we can generate samples from it effortlessly}. This observation leads to the central insight that transforms an intractable inference problem into a tractable machine learning problem.
+
+The key recognition is that for any parameter configuration $\theta$, we can generate synthetic observations through the simple procedure:
+\begin{align}
+    \theta &\sim p(\theta) \quad \text{(sample from prior)} \\
+    d &= \mathcal{S}(\theta, \epsilon) \quad \text{(run forward simulation)}
+\end{align}
+
+This generates pairs $\{(\theta_i, d_i)\}_{i=1}^N$ that are exact samples from the joint distribution $p(\theta, d)$, despite our inability to evaluate the likelihood analytically. The forward simulation $\mathcal{S}$ can be arbitrarily complex—involving hydrodynamical physics, stochastic star formation, Monte Carlo radiative transfer, etc. as long as it can be executed.
+
+Having access to samples from $p(\theta, d)$, all that remains it the ability to estimate conditional density functions like $p(d|\theta)$ or $p(\theta|d)$ given $\{(\theta_i, d_i)\}_{i=1}^N$.
+
+\subsubsection{Neural Networks as Distribution Approximators}
+
+This approach transforms Bayesian inference from an analytical derivation problem into a \textbf{supervised learning problem}. Neural networks serve as flexible function approximators that can learn complex, high-dimensional probability distributions from training data. The universal approximation theorem guarantees that sufficiently wide neural networks can approximate any continuous function to arbitrary precision, making them ideal candidates for this task.
+
+The training process follows standard machine learning principles: we maximize the likelihood of observed simulation pairs under the neural network's parametric distribution. For example, to learn the posterior $p(\theta|d)$, we train a neural network $f_\phi(d)$ that outputs the parameters of a probability distribution over $\theta$, optimizing:
 \begin{equation}
-    d = \mathcal{S}(\theta, \epsilon) + \text{noise}
+    \phi^* = \arg\max_\phi \sum_{i=1}^N \log p_\phi(\theta_i | d_i)
 \end{equation}
 
-Examples include:
-\begin{itemize}
-    \item Hydrodynamical simulations with complex baryonic physics and feedback prescriptions
-    \item Galaxy formation models with stochastic star formation and merger histories  
-    \item Full radiative transfer codes with Monte Carlo photon transport
-    \item End-to-end instrument simulators with realistic systematics
-\end{itemize}
+Once trained, the network provides a fast approximation to the desired distribution that can be evaluated and sampled from efficiently, enabling standard Bayesian inference workflows.
 
-In this regime, the likelihood $p(d|\theta)$ cannot be computed directly because:
+\subsubsection{Information-Theoretic Perspective}
+
+From an information-theoretic standpoint, \textbf{implicit inference preserves the complete information content} of the forward model without the approximations required for analytical tractability. Unlike summary statistics approaches that compress millions of measurements into a handful of correlation function bins, SBI can work directly with high-dimensional data vectors, capturing non-Gaussian features, higher-order correlations, and spatial patterns that traditional methods might miss.
+
+However, this information preservation comes with a fundamental trade-off: \textbf{we exchange analytical certainty for empirical approximation}. While explicit methods provide exact answers (subject to their modeling assumptions), implicit methods introduce approximation errors through the neural network learning process. This necessitates careful validation procedures and uncertainty quantification techniques that we will explore later.
+
+\subsubsection{Computational and Practical Considerations}
+
+The transition to implicit inference fundamentally changes the computational bottleneck of Bayesian analysis. Instead of expensive MCMC chains that require likelihood evaluations at every step, the computational cost shifts to:
+
 \begin{enumerate}
-    \item The mapping $\mathcal{S}$ is not analytically tractable
-    \item The stochastic elements $\epsilon$ are not marginalized over in closed form
-    \item Each likelihood evaluation would require many expensive simulations to estimate the integral over $\epsilon$
+    \item \textbf{Simulation phase}: Generating training datasets $\{(\theta_i, d_i)\}_{i=1}^N$ through forward modeling
+    \item \textbf{Training phase}: Optimizing neural network parameters through gradient-based methods
+    \item \textbf{Inference phase}: Fast evaluation and sampling from the trained neural network
 \end{enumerate}
 
-\textbf{The SBI Solution}: Despite these challenges, we can generate samples from the joint distribution $p(d, \theta)$ by the simple procedure:
-\begin{enumerate}
-    \item Sample parameters $\theta \sim p(\theta)$ from the prior
-    \item Run forward simulation $d \sim p(d|\theta)$ via $\mathcal{S}(\theta, \epsilon)$
-\end{enumerate}
+This redistribution often proves advantageous because: (1) simulations can be parallelized efficiently across computational resources, (2) neural network training, while intensive, is a one-time cost that amortizes over multiple inference problems, and (3) once trained, the networks enable rapid exploration of different observational scenarios.
 
-\textbf{Simulation-Based Inference} exploits this sampling capability by training neural networks to approximate the distributions needed for Bayesian inference—whether the posterior $p(\theta|d)$, likelihood $p(d|\theta)$, or likelihood ratios—directly from pairs $\{(\theta_i, d_i)\}_{i=1}^N$ generated by this procedure.
+\bigskip
 
-\textbf{Key Advantages}: Handles arbitrarily complex simulators, scales to high-dimensional parameter and data spaces, leverages full information content without summary statistics.
-
-\textbf{Key Challenges}: Requires careful neural architecture design, simulation efficiency becomes critical, validation requires specialized techniques since exact answers are unknown.
-
-This \textbf{paradigm shift from explicit evaluation to implicit learning} enables inference in previously intractable scenarios while preserving the principled foundation of Bayesian statistics. The next section explores the neural density estimation techniques that make this approach possible.
+The shift to implicit inference represents more than a technical solution to computational constraints—it embodies a \textbf{fundamental reconceptualization of how we approach scientific inference in the era of complex simulations}. Rather than forcing realistic physics into analytically tractable approximations, we embrace the full complexity of our best physical models and use machine learning to bridge the gap between simulation capability and inference needs. This paradigm enables cosmology to fully leverage decades of investment in sophisticated simulation codes while maintaining the rigorous statistical framework of Bayesian analysis.
 
 \section{Neural Density Estimation}
 
