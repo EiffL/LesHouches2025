@@ -102,7 +102,7 @@
 
 \maketitle
 
-\section{Introduction}
+\section*{Introduction}
 
 Simulation-Based Inference (SBI) addresses a fundamental challenge in modern cosmological data analysis: performing Bayesian inference when the likelihood function $p(d|\theta)$ is intractable or computationally prohibitive to evaluate. Traditional approaches rely on analytical likelihood expressions or approximations that become inadequate for complex, high-dimensional data such as cosmic web fields, galaxy clustering, or gravitational lensing maps.
 
@@ -113,45 +113,190 @@ This approach has proven particularly powerful in cosmology, where sophisticated
 In these lecture notes, we will cover the connection between SBI and other forms of Bayesian inference, the theoretical foundations of neural density estimation powering SBI, and its practical applications in cosmological inference problems. We will also discuss the challenges and best practices for implementing SBI in real-world scenarios.
 
 
-\section{What Makes SBI Different?}
+\section{MCMC, SBI, Full Field Inference... What is the difference?}
 
-\subsection{Traditional Inference Approaches}
+\subsection{Fundamental notations and definitions for Bayesian Inference}
+
+Let us start by establishing the standard framework for Bayesian inference. Let $\theta \in \Theta \subseteq \mathbb{R}^p$ denote a vector of parameters of interest, and $d \in \mathcal{D}$ represent observed data. The fundamental quantities in Bayesian inference are:
+
 \begin{itemize}
-    \item Analytic likelihoods: When we can write $p(d|\theta)$ explicitly
-    \item Full-field inference: Challenges with high-dimensional data
-    \item Hierarchical models: Complexity in multi-level inference
+    \item \textbf{Prior distribution}: $p(\theta)$ encodes our beliefs about parameters before observing data
+    \item \textbf{Likelihood function}: $p(d|\theta)$ specifies the probability of observing data $d$ given parameters $\theta$
+    \item \textbf{Posterior distribution}: $p(\theta|d)$ represents our updated beliefs about parameters after observing data
+    \item \textbf{Evidence (marginal likelihood)}: $p(d) = \int p(d|\theta)p(\theta) \, d\theta$ normalizes the posterior
 \end{itemize}
 
-\subsection{The SBI Paradigm}
-\begin{definition}
-\emph{Simulation-Based Inference} is a framework for performing Bayesian inference when the likelihood is intractable but we can generate simulations from the forward model.
-\end{definition}
+Given these definitions, the famous Bayes' theorem connects these quantities according to:
+\begin{equation}
+    \boxed{p(\theta|d) = \frac{p(d|\theta)p(\theta)}{p(d)}}
+\end{equation}
 
-Key insight: Learn implicit distributions from simulations rather than deriving explicit likelihoods.
+No matter the inference strategy, these definitions remain the same. SBI will differ from other Bayesian inference techniques only in the strategy used to estimate these distributions. 
+
+\subsection{Explicit Inference}
+
+\textbf{Explicit inference} forms the foundation of classical Bayesian computation and encompasses all approaches where the \textbf{likelihood function $p(d|\theta)$ can be evaluated point-wise} for any given combination of data $d$ and parameters $\theta$. This seemingly simple requirement enables the entire machinery of Markov Chain Monte Carlo (MCMC) algorithms that have dominated Bayesian inference for decades.
+
+To understand why likelihood evaluation is crucial, consider how MCMC algorithms explore the posterior distribution. Whether using the Metropolis-Hastings algorithm, Gibbs sampling, or more sophisticated variants, these methods fundamentally rely on computing \textbf{likelihood ratios} to make accept-reject decisions. At each step, a proposal $\theta'$ is compared to the current state $\theta$ through the ratio:
+\begin{equation}
+    r = \frac{p(\theta'|d)}{p(\theta|d)} = \frac{p(d|\theta')p(\theta')}{p(d|\theta)p(\theta)}
+\end{equation}
+Without the ability to evaluate the likelihoods $p(d|\theta)$ and $p(d|\theta')$ at two different points in parameter space, this ratio cannot be computed, and the MCMC chain cannot advance. This fundamental dependency explains why explicit inference has been the dominant paradigm in computational statistics.
+
+In practice, evaluating likelihoods for raw cosmological data presents a fundamental challenge. Consider a weak lensing survey observing shear measurements $\gamma_{i}$ for millions of galaxies across the sky. The likelihood $p(\{\gamma_i\}|\theta)$ for these raw measurements involves complex correlations due to cosmic structure, survey geometry, and measurement uncertainties—making analytical evaluation intractable. The same problem arises for galaxy positions, CMB temperature maps, or any high-dimensional cosmological dataset.
+
+This tractability crisis drove cosmologists to adopt \textbf{summary statistics} as an ingenious workaround. Instead of working with millions of individual measurements, we compress the data into a manageable set of statistics for which analytical likelihoods can be derived. The \textbf{two-point correlation function} became the workhorse of cosmological analysis precisely because its likelihood could be written down. For weak lensing, shear measurements from millions of galaxies are compressed into correlation functions $\xi_+(\theta)$ and $\xi_-(\theta)$, whose likelihood can be modeled as multivariate Gaussian:
+\begin{equation}
+    p(\xi_{\text{obs}}|\theta) = \mathcal{N}(\xi_{\text{obs}}; \xi_{\text{theory}}(\theta), C)
+\end{equation}
+where $\xi_{\text{theory}}(\theta)$ comes from analytical models (linear perturbation theory, halo models) and $C$ represents the covariance matrix. This Gaussian assumption is justified by the Central Limit Theorem when averaging over many independent modes, making the likelihood both tractable and well-understood.
+
+This framework has enabled precise cosmological parameter constraints from surveys like DES, KiDS, and HSC. However, it comes with a fundamental cost: \textbf{information loss}. By compressing millions of measurements into a handful of correlation function bins, we discard vast amounts of information contained in higher-order statistics, non-Gaussian features, and spatial correlations that cannot be captured by two-point functions. For instance, information about primordial non-Gaussianity, modified gravity, or baryonic physics often resides in three-point functions, field-level features, or other statistics not captured by traditional approaches.
+
+To access this lost information while maintaining explicit inference, we must abandon summary statistics and model the \textbf{complete data generation process}. This requires constructing hierarchical models that explicitly represent the physical processes generating observations. Instead of compressing data into summaries, we introduce \textbf{latent variables} $z$ representing unobserved quantities like the true underlying cosmic fields. The generative model becomes:
+\begin{align}
+    \theta &\sim p(\theta) \quad \text{(cosmological parameters)} \\
+    z|\theta &\sim p(z|\theta) \quad \text{(latent cosmic field)} \\
+    d|z &\sim p(d|z) \quad \text{(observation process)}
+\end{align}
+
+The joint posterior over both parameters and latent variables is:
+\begin{equation}
+    p(\theta, z|d) \propto p(d|z)p(z|\theta)p(\theta)
+\end{equation}
+
+This framework remains \textbf{explicitly tractable} as long as each component can be evaluated: $p(d|z)$ models the observation process (e.g., Poisson noise, instrumental systematics), $p(z|\theta)$ represents the physical field generation process, and $p(\theta)$ encodes prior knowledge.
+
+A paradigmatic example is the \textbf{BORG algorithm} (Bayesian Origin Reconstruction from Galaxies) developed by Florent Leclercq and colleagues (see Florent's lecture in this school). BORG performs inference on the initial density field of the universe given observed galaxy positions. The hierarchical model structure is:
+\begin{align}
+    \theta &\sim p(\theta) \quad \text{(cosmological parameters)} \\
+    \delta_0 &\sim \mathcal{N}(0, P(\theta)) \quad \text{(initial density field)} \\
+    \delta(z) &= \mathcal{F}[\delta_0, \theta] \quad \text{(gravitational evolution)} \\
+    n_g &= \text{Poisson}(\rho_g[\delta(z)]) \quad \text{(galaxy counts)}
+\end{align}
+
+Here, $\mathcal{F}$ represents forward modeling through Lagrangian Perturbation Theory (LPT), and $\rho_g$ is the biased galaxy density field. Crucially, even though $\mathcal{F}$ involves complex physics, the likelihood remains explicit because: (1) LPT provides an analytical (though approximate) mapping from initial to final conditions, (2) all intermediate variables ($\delta_0$, $\delta(z)$) are tracked explicitly, and (3) the observation model $p(n_g|\delta(z))$ is analytically tractable. BORG can simultaneously reconstruct the cosmic web and constrain cosmological parameters while utilizing the full spatial information in galaxy surveys—a significant advance over traditional correlation function analyses.
+
+From an information-theoretic perspective, explicit hierarchical inference represents the \textbf{theoretically optimal approach} to parameter estimation. By modeling the complete generative process without information-losing compression, these methods can achieve the theoretical minimum possible uncertainties (the Cramér-Rao bound). This optimality explains the appeal of full-field methods in cosmology.
+
+However, this theoretical optimality comes with severe practical challenges. The first is \textbf{computational scaling}: the dimensionality of latent variable spaces grows rapidly with field resolution. A modest $128^3$ cosmic web simulation involves $\sim 2 \times 10^6$ latent variables, making standard MCMC inefficient. High-dimensional sampling requires sophisticated algorithms like Hamiltonian Monte Carlo (HMC) that can explore the posterior efficiently.
+
+The second challenge involves \textbf{differentiability requirements}: HMC algorithms require computing gradients of the log-posterior with respect to all variables, including the high-dimensional latent field. This necessitates that the forward model $p(z|\theta)$ be differentiable—a strong constraint that excludes many realistic simulation codes. While LPT is differentiable (enabling BORG), full N-body simulations or hydrodynamical codes typically are not.
+
+The third challenge is \textbf{model fidelity}: explicit models must make approximations to remain tractable. BORG's use of LPT, while differentiable, becomes inaccurate in highly nonlinear regimes. The fundamental tension between model complexity and computational tractability limits the realism achievable in explicit frameworks.
+
+These limitations motivate the development of implicit inference methods that can handle arbitrary simulation complexity without differentiability requirements, albeit at the cost of the theoretical guarantees provided by explicit approaches.
+
+\subsection{Implicit Inference}
+
+\textbf{Implicit inference} becomes necessary when the forward model cannot be decomposed into tractable probabilistic components, making the likelihood $p(d|\theta)$ effectively unevaluable. This situation arises when simulations involve complex, nonlinear processes that defy analytical description or when computational constraints make likelihood evaluation prohibitively expensive.
+
+\textbf{The Black-Box Simulation Regime}: Consider a complex forward model $\mathcal{S}(\theta, \epsilon)$ where $\epsilon$ represents stochastic elements that are not tracked or controllable (e.g., random number generator seeds, stochastic subgrid physics implementations, Monte Carlo sampling within the simulation). The relationship between parameters $\theta$ and observations $d$ is implicitly defined through:
+\begin{equation}
+    d = \mathcal{S}(\theta, \epsilon) + \text{noise}
+\end{equation}
+
+Examples include:
+\begin{itemize}
+    \item Hydrodynamical simulations with complex baryonic physics and feedback prescriptions
+    \item Galaxy formation models with stochastic star formation and merger histories  
+    \item Full radiative transfer codes with Monte Carlo photon transport
+    \item End-to-end instrument simulators with realistic systematics
+\end{itemize}
+
+In this regime, the likelihood $p(d|\theta)$ cannot be computed directly because:
+\begin{enumerate}
+    \item The mapping $\mathcal{S}$ is not analytically tractable
+    \item The stochastic elements $\epsilon$ are not marginalized over in closed form
+    \item Each likelihood evaluation would require many expensive simulations to estimate the integral over $\epsilon$
+\end{enumerate}
+
+\textbf{The SBI Solution}: Despite these challenges, we can generate samples from the joint distribution $p(d, \theta)$ by the simple procedure:
+\begin{enumerate}
+    \item Sample parameters $\theta \sim p(\theta)$ from the prior
+    \item Run forward simulation $d \sim p(d|\theta)$ via $\mathcal{S}(\theta, \epsilon)$
+\end{enumerate}
+
+\textbf{Simulation-Based Inference} exploits this sampling capability by training neural networks to approximate the distributions needed for Bayesian inference—whether the posterior $p(\theta|d)$, likelihood $p(d|\theta)$, or likelihood ratios—directly from pairs $\{(\theta_i, d_i)\}_{i=1}^N$ generated by this procedure.
+
+\textbf{Key Advantages}: Handles arbitrarily complex simulators, scales to high-dimensional parameter and data spaces, leverages full information content without summary statistics.
+
+\textbf{Key Challenges}: Requires careful neural architecture design, simulation efficiency becomes critical, validation requires specialized techniques since exact answers are unknown.
+
+This \textbf{paradigm shift from explicit evaluation to implicit learning} enables inference in previously intractable scenarios while preserving the principled foundation of Bayesian statistics. The next section explores the neural density estimation techniques that make this approach possible.
 
 \section{Neural Density Estimation}
 
-\subsection{Foundations: What is a Neural Network?}
-Brief overview of neural networks as universal function approximators and their training via gradient descent.
+The core challenge in implicit inference is learning probability distributions from samples rather than analytical expressions. This section introduces the neural network machinery that enables SBI by approximating complex, high-dimensional probability densities from simulation data.
+
+\subsection{The Density Estimation Problem}
+
+In traditional statistics, we often work with known parametric families (e.g., Gaussian, exponential) where the functional form is specified and we only need to estimate parameters. For SBI, we face a fundamentally different challenge: **learning the shape of unknown probability distributions** from samples generated by black-box simulators.
+
+Given samples $\{x_i\}_{i=1}^N$ drawn from an unknown distribution $p(x)$, density estimation seeks to construct an approximation $\hat{p}(x)$ that captures the underlying probability structure. In the SBI context, these samples come from running forward simulations: $x_i = \mathcal{S}(\theta_i, \epsilon_i)$ where $\theta_i$ are sampled parameters and $\epsilon_i$ represent simulation randomness.
+
+\subsection{Neural Networks as Universal Approximators}
+
+Neural networks provide the flexibility needed for this task through their **universal approximation capabilities**. A feedforward neural network with sufficient width can approximate any continuous function to arbitrary precision, making them natural candidates for density estimation.
+
+The basic building block is a multilayer perceptron:
+\begin{equation}
+    f(x) = W_L \sigma(W_{L-1} \sigma(\cdots \sigma(W_1 x + b_1) \cdots) + b_{L-1}) + b_L
+\end{equation}
+where $W_\ell$ are weight matrices, $b_\ell$ are bias vectors, and $\sigma(\cdot)$ is a nonlinear activation function. The network learns optimal parameters through gradient-based optimization on training data.
+
+For density estimation, the key insight is to use neural networks to parameterize probability distributions, then train them to maximize the likelihood of observed samples.
 
 \subsection{Mixture Density Networks (MDNs)}
-The simplest approach to density estimation:
+
+The conceptually simplest approach to neural density estimation uses **mixture models** where neural networks predict the parameters of a mixture of simple distributions. For a mixture of $K$ Gaussians:
+
 \begin{equation}
     p(x|\theta) = \sum_{k=1}^K \pi_k(\theta) \mathcal{N}(x | \mu_k(\theta), \sigma_k(\theta))
 \end{equation}
 
-\subsection{Normalizing Flows}
-More flexible density estimation through invertible transformations:
+Here, neural networks $\pi_k(\cdot)$, $\mu_k(\cdot)$, and $\sigma_k(\cdot)$ output the mixture weights, means, and standard deviations respectively as functions of conditioning variables $\theta$. The networks are trained by maximizing the log-likelihood:
 \begin{equation}
-    p(x) = p(z) \left| \det \frac{\partial f^{-1}}{\partial x} \right|
+    \mathcal{L} = \sum_{i=1}^N \log p(x_i|\theta_i)
 \end{equation}
 
-\subsection{Advanced Methods}
+**Advantages**: Interpretable components, stable training, works well for unimodal or simple multimodal distributions.
+
+**Limitations**: Limited flexibility for complex distributions, requires manual specification of mixture components $K$.
+
+\subsection{Normalizing Flows}
+
+For greater flexibility, **normalizing flows** learn invertible transformations between a simple base distribution (e.g., standard Gaussian) and the target distribution. The key idea is to apply a sequence of invertible functions $f = f_L \circ \cdots \circ f_1$ that transform samples $z \sim p_0(z)$ to $x = f(z)$.
+
+The probability density follows from the change of variables formula:
+\begin{equation}
+    p(x) = p_0(z) \left| \det \frac{\partial f^{-1}}{\partial x} \right| = p_0(f^{-1}(x)) \left| \det \frac{\partial f^{-1}}{\partial x} \right|
+\end{equation}
+
+Each transformation $f_i$ must be invertible with tractable Jacobian determinant. Common architectures include:
 \begin{itemize}
-    \item Score matching: Learning $\nabla_x \log p(x)$
-    \item Stochastic interpolants
-    \item Diffusion models for density estimation
+    \item **Coupling flows**: Split dimensions and use neural networks to transform subsets
+    \item **Autoregressive flows**: Transform dimensions sequentially using autoregressive dependencies
+    \item **Continuous normalizing flows**: Use neural ODEs for infinite-depth transformations
 \end{itemize}
+
+**Advantages**: High expressiveness, exact likelihood computation, efficient sampling via forward pass.
+
+**Limitations**: Architectural constraints for invertibility, computational cost of Jacobian determinants.
+
+\subsection{Advanced Methods}
+
+Recent developments have expanded the toolkit for neural density estimation:
+
+\begin{itemize}
+    \item **Score matching**: Instead of learning $p(x)$ directly, learn the score function $s(x) = \nabla_x \log p(x)$. The score characterizes the distribution and can be learned without normalization constants.
+    
+    \item **Diffusion models**: Model the gradual denoising process from pure noise to data samples. These have shown remarkable success in generative modeling and are increasingly used for density estimation.
+    
+    \item **Neural spline flows**: Use neural networks to parameterize monotonic spline functions, providing a good balance between flexibility and computational efficiency.
+\end{itemize}
+
+The choice of method depends on the specific requirements: MDNs for interpretability, normalizing flows for exact likelihoods, and advanced methods for maximum flexibility. In the next section, we explore how these density estimation techniques enable the three main approaches to SBI.
 
 \section{From Density Estimation to Bayesian Inference}
 

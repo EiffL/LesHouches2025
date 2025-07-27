@@ -40,6 +40,25 @@ The LaTeX document uses a custom Les Houches style with:
 - Structured sections following the SBI lecture outline
 - Minimal content serving as a skeleton for the full lecture
 
+## Writing Style Guidelines
+
+When editing or creating content for this lecture, maintain the following style:
+
+### Tone and Approach
+- **Authoritative yet pedagogical** - scholarly and precise with deliberate explanatory moments
+- Appropriate for graduate-level lecture notes that are both rigorous and teachable
+- Academic formality with clarity - rigorous but accessible language
+
+### Formatting and Structure
+- **Strategic emphasis** - selective use of bold for key conceptual distinctions
+- **Balanced structure** - logical flow with clear paragraph organization
+- **Forward-looking organization** - sections that summarize and set expectations
+
+### Language Conventions
+- **Precise technical terminology** - exact language over colloquial explanations
+- **Explanatory clarifications** - helpful parenthetical remarks without repetition
+- **Comprehensive but concise** - thorough coverage while maintaining brevity
+
 ## Development Workflow
 
 1. Edit LaTeX files in the `notes/` directory
