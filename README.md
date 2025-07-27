@@ -67,5 +67,5 @@ Under the following terms:
 
 ## 🧠 AI Statement
 
-These lecture materials were produced with Claude Sonnet 4 via [Claude Code CLI](https://www.anthropic.com/claude-code) under close guidance, supervision, and review from the Author, @EiffL.
+These lecture materials were produced with Claude Sonnet 4 via [Claude Code CLI](https://www.anthropic.com/claude-code) under close guidance, supervision, and review from the Author, [@EiffL](https://github.com/EiffL/).
 
