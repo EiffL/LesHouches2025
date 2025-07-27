@@ -65,4 +65,7 @@ This means you are free to:
 Under the following terms:
 - **Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
 
+## 🧠 AI Statement
+
+These lecture materials were produced with Claude Sonnet 4 via [Claude Code CLI](https://www.anthropic.com/claude-code) under close guidance, supervision, and review from the Author, @EiffL.
 

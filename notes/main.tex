@@ -20,7 +20,7 @@
     bottom=2.5cm,
     left=2.5cm,
     right=2.5cm,
-    headheight=14pt
+    headheight=24pt
 }
 
 % Colors
@@ -53,16 +53,17 @@
 \newtheorem*{remark}{Remark}
 
 % Custom commands
-\newcommand{\lecturetitle}[1]{\def\@lecturetitle{#1}}
-\newcommand{\lecturer}[1]{\def\@lecturer{#1}}
-\newcommand{\lecturedate}[1]{\def\@lecturedate{#1}}
-\newcommand{\lecturenumber}[1]{\def\@lecturenumber{#1}\def\thelecturenumber{#1}}
+\makeatletter
+\newcommand{\lecturetitle}[1]{\gdef\@lecturetitle{#1}}
+\newcommand{\lecturer}[1]{\gdef\@lecturer{#1}}
+\newcommand{\lecturedate}[1]{\gdef\@lecturedate{#1}}
+\newcommand{\lecturenumber}[1]{\gdef\@lecturenumber{#1}\gdef\thelecturenumber{#1}}
 
 % Default values
-\lecturetitle{Lecture Title}
-\lecturer{Lecturer Name}
-\lecturedate{\today}
-\lecturenumber{1}
+\gdef\@lecturetitle{Lecture Title}
+\gdef\@lecturer{Lecturer Name}
+\gdef\@lecturedate{\today}
+\gdef\@lecturenumber{1}
 
 % Title formatting
 \renewcommand{\maketitle}{
@@ -78,6 +79,7 @@
     \hrule
     \vspace{1.5em}
 }
+\makeatother
 
 % Hyperref setup
 \hypersetup{
@@ -86,7 +88,7 @@
     citecolor=leshouches,
     urlcolor=leshouches,
     pdftitle={Simulation-Based Inference for Cosmology - Les Houches 2025},
-    pdfauthor={\@lecturer}
+    pdfauthor={François Lanusse, CNRS/CEA Paris-Saclay}
 }
 
 % Document begins here
