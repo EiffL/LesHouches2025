@@ -145,15 +145,17 @@ Without the ability to evaluate the likelihoods $p(d|\theta)$ and $p(d|\theta')$
 
 In practice, evaluating likelihoods for raw cosmological data presents a fundamental challenge. Consider a weak lensing survey observing shear measurements $\gamma_{i}$ for millions of galaxies across the sky. The likelihood $p(\{\gamma_i\}|\theta)$ for these raw measurements involves complex correlations due to cosmic structure, survey geometry, and measurement uncertainties—making analytical evaluation intractable. The same problem arises for galaxy positions, CMB temperature maps, or any high-dimensional cosmological dataset.
 
-This tractability crisis drove cosmologists to adopt \textbf{summary statistics} as an ingenious workaround. Instead of working with millions of individual measurements, we compress the data into a manageable set of statistics for which analytical likelihoods can be derived. The \textbf{two-point correlation function} became the workhorse of cosmological analysis precisely because its likelihood could be written down. For weak lensing, shear measurements from millions of galaxies are compressed into correlation functions $\xi_+(\theta)$ and $\xi_-(\theta)$, whose likelihood can be modeled as multivariate Gaussian:
+This tractability issue drove cosmologists to adopt \textbf{summary statistics} as an ingenious workaround. Instead of working with millions of individual measurements, we compress the data into a manageable set of statistics for which analytical likelihoods can be derived. The \textbf{two-point correlation function} became the workhorse of cosmological analysis precisely because its likelihood could be written down. For weak lensing, shear measurements from millions of galaxies are compressed into correlation functions $\xi_+(\theta)$ and $\xi_-(\theta)$, whose likelihood can be modeled as multivariate Gaussian:
 \begin{equation}
     p(\xi_{\text{obs}}|\theta) = \mathcal{N}(\xi_{\text{obs}}; \xi_{\text{theory}}(\theta), C)
 \end{equation}
 where $\xi_{\text{theory}}(\theta)$ comes from analytical models (linear perturbation theory, halo models) and $C$ represents the covariance matrix. This Gaussian assumption is justified by the Central Limit Theorem when averaging over many independent modes, making the likelihood both tractable and well-understood.
 
-This framework has enabled precise cosmological parameter constraints from surveys like DES, KiDS, and HSC. However, it comes with a fundamental cost: \textbf{information loss}. By compressing millions of measurements into a handful of correlation function bins, we discard vast amounts of information contained in higher-order statistics, non-Gaussian features, and spatial correlations that cannot be captured by two-point functions. For instance, information about primordial non-Gaussianity, modified gravity, or baryonic physics often resides in three-point functions, field-level features, or other statistics not captured by traditional approaches.
+This framework has enabled precise cosmological parameter constraints from Large Scale Structure surveys like DES, KiDS, and HSC. However, it comes at the cost a fundamental limitation: potential \textbf{information loss}. By compressing millions of measurements into a handful of correlation function bins, we may discard a significant amount of information contained in higher-order statistics, non-Gaussian features, and spatial correlations that cannot be captured by two-point functions, which are only theoretically optimal for the analysis of Gaussian fields.
 
-To access this lost information while maintaining explicit inference, we must abandon summary statistics and model the \textbf{complete data generation process}. This requires constructing hierarchical models that explicitly represent the physical processes generating observations. Instead of compressing data into summaries, we introduce \textbf{latent variables} $z$ representing unobserved quantities like the true underlying cosmic fields. The generative model becomes:
+To access the \textit{full information content} of a given survey while maintaining explicit inference, we must abandon summary statistics and instead model the measured fields in high dimension and in all their complexity, which is usualy referred to as \textbf{full-field inference}. This will require constructing complex models that represent the \textbf{complete data generation process} behind the observations, in other words, a forward simulation of the measured high-dimensional data.
+
+Performing explicit inference over such models is possible but requires the introduction of a set of \textbf{latent variables} $z$ representing unobserved quantities like the true underlying cosmic fields. \textbf{The generative model becomes hierarchical} and can be expressed as:
 \begin{align}
     \theta &\sim p(\theta) \quad \text{(cosmological parameters)} \\
     z|\theta &\sim p(z|\theta) \quad \text{(latent cosmic field)} \\
@@ -165,9 +167,9 @@ The joint posterior over both parameters and latent variables is:
     p(\theta, z|d) \propto p(d|z)p(z|\theta)p(\theta)
 \end{equation}
 
-This framework remains \textbf{explicitly tractable} as long as each component can be evaluated: $p(d|z)$ models the observation process (e.g., Poisson noise, instrumental systematics), $p(z|\theta)$ represents the physical field generation process, and $p(\theta)$ encodes prior knowledge.
+This framework remains \textbf{explicitly tractable} as long as each component can be evaluated: $p(d|z)$ models the observation process (e.g., Poisson noise, instrumental systematics), $p(z|\theta)$ represents the physical field generation process, and $p(\theta)$ encodes prior knowledge. Compared to summary-statistics-based explicit inference, we now need to infer the set of latent variable $z$ in addition to the comological parameters $\theta$ which can become very challening whe $z$ is high-dimensional. 
 
-A paradigmatic example is the \textbf{BORG algorithm} (Bayesian Origin Reconstruction from Galaxies) developed by Florent Leclercq and colleagues (see Florent's lecture in this school). BORG performs inference on the initial density field of the universe given observed galaxy positions. The hierarchical model structure is:
+A paradigmatic example is the \textbf{BORG algorithm} (Bayesian Origin Reconstruction from Galaxies, see Florent's lecture in this school). BORG performs inference on the initial density field of the universe given observed galaxy positions. The hierarchical model structure is:
 \begin{align}
     \theta &\sim p(\theta) \quad \text{(cosmological parameters)} \\
     \delta_0 &\sim \mathcal{N}(0, P(\theta)) \quad \text{(initial density field)} \\
@@ -175,17 +177,21 @@ A paradigmatic example is the \textbf{BORG algorithm} (Bayesian Origin Reconstru
     n_g &= \text{Poisson}(\rho_g[\delta(z)]) \quad \text{(galaxy counts)}
 \end{align}
 
-Here, $\mathcal{F}$ represents forward modeling through Lagrangian Perturbation Theory (LPT), and $\rho_g$ is the biased galaxy density field. Crucially, even though $\mathcal{F}$ involves complex physics, the likelihood remains explicit because: (1) LPT provides an analytical (though approximate) mapping from initial to final conditions, (2) all intermediate variables ($\delta_0$, $\delta(z)$) are tracked explicitly, and (3) the observation model $p(n_g|\delta(z))$ is analytically tractable. BORG can simultaneously reconstruct the cosmic web and constrain cosmological parameters while utilizing the full spatial information in galaxy surveys—a significant advance over traditional correlation function analyses.
+Here, $\mathcal{F}$ represents forward modeling through Lagrangian Perturbation Theory (LPT), and $\rho_g$ is the biased galaxy density field. Crucially, even though $\mathcal{F}$ involves complex physics, the likelihood remains explicit because: (1) LPT provides an analytical (though approximate) mapping from initial to final conditions, (2) all intermediate variables ($\delta_0$, $\delta(z)$) are tracked explicitly, and (3) the observation model $p(n_g|\delta(z))$ is analytically tractable. BORG can simultaneously reconstruct the cosmic web and constrain cosmological parameters while utilizing the full spatial information in galaxy surveys.
 
-From an information-theoretic perspective, explicit hierarchical inference represents the \textbf{theoretically optimal approach} to parameter estimation. By modeling the complete generative process without information-losing compression, these methods can achieve the theoretical minimum possible uncertainties (the Cramér-Rao bound). This optimality explains the appeal of full-field methods in cosmology.
+From an information-theoretic perspective, explicit hierarchical inference represents the \textbf{theoretically optimal approach} to parameter estimation. By modeling the complete generative process without information-losing compression, these methods can achieve the theoretical minimum possible uncertainties (the Cramér-Rao bound). 
 
-However, this theoretical optimality comes with severe practical challenges. The first is \textbf{computational scaling}: the dimensionality of latent variable spaces grows rapidly with field resolution. A modest $128^3$ cosmic web simulation involves $\sim 2 \times 10^6$ latent variables, making standard MCMC inefficient. High-dimensional sampling requires sophisticated algorithms like Hamiltonian Monte Carlo (HMC) that can explore the posterior efficiently.
+However, this theoretical optimality comes with important practical challenges. 
 
-The second challenge involves \textbf{differentiability requirements}: HMC algorithms require computing gradients of the log-posterior with respect to all variables, including the high-dimensional latent field. This necessitates that the forward model $p(z|\theta)$ be differentiable—a strong constraint that excludes many realistic simulation codes. While LPT is differentiable (enabling BORG), full N-body simulations or hydrodynamical codes typically are not.
+The first is \textbf{computational scaling}: the dimensionality of latent variable spaces grows rapidly with field resolution. A modest $128^3$ cosmic web simulation involves $\sim 2 \times 10^6$ latent variables, making standard MCMC inefficient. High-dimensional sampling requires sophisticated algorithms like Hamiltonian Monte Carlo (HMC) that can explore the posterior efficiently.
+
+The second challenge involves \textbf{differentiability requirements}: algorithms like HMC require computing gradients of the log-posterior with respect to all variables, including the high-dimensional latent field. This necessitates that the forward model $p(z|\theta)$ be differentiable, a strong constraint that excludes many realistic simulation codes.
 
 The third challenge is \textbf{model fidelity}: explicit models must make approximations to remain tractable. BORG's use of LPT, while differentiable, becomes inaccurate in highly nonlinear regimes. The fundamental tension between model complexity and computational tractability limits the realism achievable in explicit frameworks.
 
-These limitations motivate the development of implicit inference methods that can handle arbitrary simulation complexity without differentiability requirements, albeit at the cost of the theoretical guarantees provided by explicit approaches.
+\bigskip
+
+Wouldn't it be nice if we could perform Full-Field inference without running into these difficulties intrinsic to high-dimensional inference?
 
 \subsection{Implicit Inference}
 
