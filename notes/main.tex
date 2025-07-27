@@ -1,0 +1,210 @@
+\documentclass[11pt,a4paper]{article}
+
+% Essential packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{physics}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+% Page geometry
+\geometry{
+    top=2.5cm,
+    bottom=2.5cm,
+    left=2.5cm,
+    right=2.5cm,
+    headheight=14pt
+}
+
+% Colors
+\definecolor{leshouches}{RGB}{25,55,95}
+\definecolor{lightgray}{RGB}{240,240,240}
+
+% Header and footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{leshouches}{\small\textsc{Les Houches École de Physique}}}
+\fancyhead[R]{\textcolor{leshouches}{\small Lecture \thelecturenumber}}
+\fancyfoot[C]{\textcolor{leshouches}{\thepage}}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{leshouches}\leaders\hrule height \headrulewidth\hfill}}
+
+% Section formatting
+\titleformat{\section}
+{\Large\bfseries\color{leshouches}}
+{\thesection}{1em}{}
+
+\titleformat{\subsection}
+{\large\bfseries\color{leshouches}}
+{\thesubsection}{1em}{}
+
+% Theorem environments
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem*{remark}{Remark}
+
+% Custom commands
+\newcommand{\lecturetitle}[1]{\def\@lecturetitle{#1}}
+\newcommand{\lecturer}[1]{\def\@lecturer{#1}}
+\newcommand{\lecturedate}[1]{\def\@lecturedate{#1}}
+\newcommand{\lecturenumber}[1]{\def\@lecturenumber{#1}\def\thelecturenumber{#1}}
+
+% Default values
+\lecturetitle{Lecture Title}
+\lecturer{Lecturer Name}
+\lecturedate{\today}
+\lecturenumber{1}
+
+% Title formatting
+\renewcommand{\maketitle}{
+    \begin{center}
+        {\Large\textcolor{leshouches}{\textbf{Les Houches École de Physique}}}\\[0.5em]
+        {\large Session 2025}\\[1.5em]
+        {\huge\textbf{\@lecturetitle}}\\[0.5em]
+        {\large Lecture \@lecturenumber}\\[1em]
+        {\large\textit{\@lecturer}}\\[0.5em]
+        {\@lecturedate}
+    \end{center}
+    \vspace{1em}
+    \hrule
+    \vspace{1.5em}
+}
+
+% Hyperref setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=leshouches,
+    citecolor=leshouches,
+    urlcolor=leshouches,
+    pdftitle={Simulation-Based Inference for Cosmology - Les Houches 2025},
+    pdfauthor={\@lecturer}
+}
+
+% Document begins here
+\begin{document}
+
+% Set lecture information
+\lecturetitle{Simulation-Based Inference for Cosmology}
+\lecturer{François Lanusse, CNRS/CEA Paris-Saclay}
+\lecturedate{Summer 2025}
+\lecturenumber{1}
+
+\maketitle
+
+\section{Introduction}
+
+These lecture notes provide a one-hour introduction to Simulation-Based Inference (SBI) for cosmological data analysis at the Les Houches École de Physique Dark Universe Summer School. We explore how neural networks enable Bayesian inference when traditional likelihood-based approaches become intractable.
+
+\section{What Makes SBI Different?}
+
+\subsection{Traditional Inference Approaches}
+\begin{itemize}
+    \item Analytic likelihoods: When we can write $p(d|\theta)$ explicitly
+    \item Full-field inference: Challenges with high-dimensional data
+    \item Hierarchical models: Complexity in multi-level inference
+\end{itemize}
+
+\subsection{The SBI Paradigm}
+\begin{definition}
+\emph{Simulation-Based Inference} is a framework for performing Bayesian inference when the likelihood is intractable but we can generate simulations from the forward model.
+\end{definition}
+
+Key insight: Learn implicit distributions from simulations rather than deriving explicit likelihoods.
+
+\section{Neural Density Estimation}
+
+\subsection{Foundations: What is a Neural Network?}
+Brief overview of neural networks as universal function approximators and their training via gradient descent.
+
+\subsection{Mixture Density Networks (MDNs)}
+The simplest approach to density estimation:
+\begin{equation}
+    p(x|\theta) = \sum_{k=1}^K \pi_k(\theta) \mathcal{N}(x | \mu_k(\theta), \sigma_k(\theta))
+\end{equation}
+
+\subsection{Normalizing Flows}
+More flexible density estimation through invertible transformations:
+\begin{equation}
+    p(x) = p(z) \left| \det \frac{\partial f^{-1}}{\partial x} \right|
+\end{equation}
+
+\subsection{Advanced Methods}
+\begin{itemize}
+    \item Score matching: Learning $\nabla_x \log p(x)$
+    \item Stochastic interpolants
+    \item Diffusion models for density estimation
+\end{itemize}
+
+\section{From Density Estimation to Bayesian Inference}
+
+\subsection{Sequential Neural Posterior Estimation (SNPE)}
+Learn the posterior $p(\theta|x)$ directly using neural density estimation.
+
+\subsection{Sequential Neural Likelihood Estimation (SNLE)}
+Learn the likelihood $p(x|\theta)$ and use MCMC for posterior sampling.
+
+\subsection{Neural Ratio Estimation (NRE)}
+Learn likelihood ratios $r(x,\theta) = p(x|\theta) / p(x|\theta_0)$ for efficient inference.
+
+\begin{remark}
+The \texttt{sbi} package provides implementations of all these methods with a unified interface.
+\end{remark}
+
+\section{Dimensionality Reduction for SBI}
+
+\subsection{Beyond Two-Point Functions}
+Capturing non-Gaussian information in cosmological fields requires going beyond traditional summary statistics.
+
+\subsection{Compression Strategies}
+\begin{itemize}
+    \item Scattering transforms
+    \item Neural compression
+    \item Information-maximizing summaries
+\end{itemize}
+
+Key principle: Preserve information relevant for inference while reducing dimensionality.
+
+\section{Robust SBI in Practice}
+
+\subsection{Key Considerations}
+\begin{enumerate}
+    \item \textbf{Frozen summarizers}: Keep feature extraction fixed during inference
+    \item \textbf{Sample efficiency}: Active learning and sequential strategies
+    \item \textbf{Ensemble methods}: Multiple networks for uncertainty quantification
+    \item \textbf{Validation}: Simulation-based calibration and coverage tests
+\end{enumerate}
+
+\subsection{Common Pitfalls}
+\begin{itemize}
+    \item Distribution shift between simulations and real data
+    \item Model misspecification
+    \item Insufficient simulation fidelity
+\end{itemize}
+
+\section{Practical Resources}
+
+\subsection{Software}
+\begin{itemize}
+    \item \texttt{sbi}: \url{https://github.com/mackelab/sbi}
+    \item \texttt{lampe}: Likelihood-free AMortized Posterior Estimation
+    \item \texttt{pydelfi}: Density Estimation Likelihood-Free Inference
+\end{itemize}
+
+\subsection{Key References}
+\begin{itemize}
+    \item Cranmer et al. (2020), ``The frontier of simulation-based inference''
+    \item Papamakarios et al. (2019), ``Neural Density Estimation: A Review''
+    \item Alsing \& Wandelt (2019), ``Generalized massive optimal data compression''
+    \item Jeffrey et al. (2020), ``Likelihood-free inference with neural compression''
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,64 @@
+name: Compile LaTeX and Release PDF
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'notes/**'
+      - '.github/workflows/compile-latex.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'notes/**'
+  workflow_dispatch:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Compile LaTeX document
+      uses: xu-cheng/latex-action@v3
+      with:
+        root_file: main.tex
+        working_directory: notes
+        compiler: pdflatex
+        args: -interaction=nonstopmode -file-line-error
+    
+    - name: Upload PDF as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: lecture-notes
+        path: notes/main.pdf
+        retention-days: 90
+    
+    - name: Check if release exists
+      id: check_release
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        if gh release view latest >/dev/null 2>&1; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+      env:
+        GH_TOKEN: ${{ github.token }}
+    
+    - name: Create or update release
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        if [ "${{ steps.check_release.outputs.exists }}" == "true" ]; then
+          # Update existing release
+          gh release upload latest notes/main.pdf --clobber
+        else
+          # Create new release
+          gh release create latest notes/main.pdf \
+            --title "Latest Lecture Notes" \
+            --notes "Automatically compiled lecture notes from the latest commit." \
+            --latest
+        fi
+      env:
+        GH_TOKEN: ${{ github.token }}
