@@ -6,16 +6,16 @@
   <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">
     <img src="https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg" alt="License: CC BY 4.0">
   </a>
-  <a href="https://github.com/EiffL/LesHouches2025/releases/latest/download/main.pdf" target="_blank">
+  <!-- <a href="https://github.com/EiffL/LesHouches2025/releases/latest/download/main.pdf" target="_blank">
     <img src="https://img.shields.io/badge/Download-PDF-red.svg" alt="Download PDF">
-  </a>
+  </a> -->
 </p>
 
 This repository contains lecture materials for a one-hour introduction to Simulation-Based Inference (SBI) in cosmology, presented at the [Les Houches Summer School on Dark Universe](https://indico.iap.fr/event/25/) at the Les Houches School of Physics, France.
 
 ## 📚 Lecture Overview
 
-This lecture provides a comprehensive introduction to modern simulation-based inference techniques for cosmological data analysis, focusing on how we can leverage neural networks to perform Bayesian inference when traditional likelihood-based approaches are intractable.
+This lecture provides an introduction to modern simulation-based inference techniques for cosmological data analysis, focusing on how we can leverage neural networks to perform Bayesian inference when traditional likelihood-based approaches are intractable.
 
 ## 🎯 Learning Objectives
 
@@ -56,19 +56,6 @@ By the end of this lecture, you will understand:
 - **Ensemble Learning**: Improving robustness through multiple models
 - **Limitations and Pitfalls**: What to watch out for in real applications
 
-
-## 📄 License
-
-This work is licensed under a [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
-
-[![CC BY 4.0](https://i.creativecommons.org/l/by/4.0/88x31.png)](https://creativecommons.org/licenses/by/4.0/)
-
-This means you are free to:
-- **Share** — copy and redistribute the material in any medium or format
-- **Adapt** — remix, transform, and build upon the material for any purpose, even commercially
-
-Under the following terms:
-- **Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
 
 ## 🧠 AI Statement
 

@@ -64,7 +64,7 @@ $\star$ \href{mailto:francois.lanusse@cnrs.fr}{\small francois.lanusse@cnrs.fr}
 
 \section*{\color{scipostdeepblue}{Abstract}}
 \textbf{\boldmath{
-Modern cosmological inference faces a fundamental challenge: extracting scientific insights from complex, high-dimensional datasets when traditional likelihood-based methods become intractable. This lecture introduces Simulation-Based Inference (SBI), a paradigm that replaces analytical likelihood evaluation with implicit distributions learned from forward simulations. We establish the theoretical foundations distinguishing explicit inference (where $p(d|\theta)$ can be evaluated) from implicit inference (where only samples from the joint distribution $p(\theta, d)$ are accessible through simulations). The lecture covers neural density estimation techniques—from Mixture Density Networks to Normalizing Flows—that enable learning complex probability distributions from simulation data. We demonstrate how these methods transform cosmological parameter estimation from summary statistic compression to full-field analysis, preserving complete information content while handling non-differentiable physics codes. Practical considerations for robust SBI implementation in cosmology are discussed, emphasizing validation strategies and common pitfalls when bridging simulations and observations.
+Modern cosmological datasets increasingly challenge traditional likelihood-based Bayesian inference, limiting our ability to extract full information content from surveys. This lecture covers Simulation-Based Inference (SBI), which replaces tractable likelihood evaluations with distributions learned from black-box simulations. We cover neural density estimation techniques, from Mixture Density Networks to Normalizing Flows, for learning complex probability distributions from simulation data. These methods enable full-field cosmological parameter estimation while handling non-differentiable physics codes, moving beyond summary statistic compression to preserve complete information content. Practical implementation considerations are discussed, including validation strategies and common pitfalls.
 }}
 
 \vspace{\baselineskip}
@@ -105,7 +105,7 @@ Modern cosmological inference faces a fundamental challenge: extracting scientif
 \vspace{10pt}
 %%%%%%%%%% END TODO: TOC
 
-\section*{Introduction}
+\section{Introduction}
 
 Simulation-Based Inference (SBI) addresses a fundamental challenge in modern cosmological data analysis: performing Bayesian inference when the likelihood function $p(d|\theta)$ is intractable or computationally prohibitive to evaluate. Traditional approaches rely on analytical likelihood expressions or approximations that become inadequate for complex, high-dimensional data such as cosmic web fields, galaxy clustering, or gravitational lensing maps.
 
@@ -114,7 +114,6 @@ The key insight of SBI is to \textbf{replace explicit likelihood} evaluations re
 This approach has proven particularly powerful in cosmology, where sophisticated N-body simulations and hydrodynamical codes can generate realistic synthetic observations, but the underlying physics is too complex for tractable likelihood expressions. SBI enables inference over high-dimensional parameter spaces using the full information content of complex datasets, moving beyond traditional summary statistics.
 
 In these lecture notes, we will cover the connection between SBI and other forms of Bayesian inference, the theoretical foundations of neural density estimation powering SBI, and its practical applications in cosmological inference problems. We will also discuss the challenges and best practices for implementing SBI in real-world scenarios.
-
 
 \section{MCMC, SBI, Full Field Inference... What is the difference?}
 
@@ -239,17 +238,6 @@ From an information-theoretic standpoint, \textbf{implicit inference preserves t
 
 However, this information preservation comes with a fundamental trade-off: \textbf{we exchange analytical certainty for empirical approximation}. While explicit methods provide exact answers (subject to their modeling assumptions), implicit methods introduce approximation errors through the neural network learning process. This necessitates careful validation procedures and uncertainty quantification techniques that we will explore later.
 
-\subsubsection{Computational and Practical Considerations}
-
-The transition to implicit inference fundamentally changes the computational bottleneck of Bayesian analysis. Instead of expensive MCMC chains that require likelihood evaluations at every step, the computational cost shifts to:
-
-\begin{enumerate}
-    \item \textbf{Simulation phase}: Generating training datasets $\{(\theta_i, d_i)\}_{i=1}^N$ through forward modeling
-    \item \textbf{Training phase}: Optimizing neural network parameters through gradient-based methods
-    \item \textbf{Inference phase}: Fast evaluation and sampling from the trained neural network
-\end{enumerate}
-
-This redistribution often proves advantageous because: (1) simulations can be parallelized efficiently across computational resources, (2) neural network training, while intensive, is a one-time cost that amortizes over multiple inference problems, and (3) once trained, the networks enable rapid exploration of different observational scenarios.
 
 \bigskip
 
@@ -332,111 +320,211 @@ The success of normalizing flows in cosmological applications stems from their a
 
 Yet this flexibility comes with computational costs. The requirement to evaluate Jacobian determinants—especially for high-dimensional problems—can make normalizing flows significantly more expensive than simpler alternatives. Moreover, ensuring numerical stability during training requires careful architectural design and regularization techniques. These considerations led researchers to explore even more flexible approaches that could capture distributional complexity without the rigid constraints imposed by invertibility requirements.
 
-\subsection{Beyond Explicit Density Models}
-
-While MDNs and normalizing flows represent major advances in neural density estimation, both approaches share a fundamental assumption: that we need to explicitly model probability densities $p(x)$. This assumption, though natural, is not always necessary for statistical inference. Recent developments have challenged this paradigm by recognizing that \textbf{many inference tasks can be performed without explicit density evaluation}, leading to methods that sidestep some of the most challenging aspects of density modeling.
-
-The limitations that motivated these advanced approaches are subtle but significant. MDNs, despite their interpretability, struggle with high-dimensional distributions and require careful tuning of mixture complexity. Normalizing flows, while theoretically powerful, impose architectural constraints that can limit their practical applicability and make them computationally expensive for very high-dimensional problems. Moreover, both approaches require careful handling of numerical stability issues when dealing with distributions that have sharp boundaries or extreme aspect ratios—situations commonly encountered in cosmological simulations.
-
-\textbf{Score matching} represents a radical departure from explicit density modeling by focusing on the score function $s(x) = \nabla_x \log p(x)$ rather than the density itself. The key insight is that the score function characterizes a probability distribution uniquely, but can often be learned more easily than the density. Crucially, the score function avoids the normalization constant that makes density estimation challenging, since $\nabla_x \log p(x) = \nabla_x \log \tilde{p}(x)$ for any unnormalized density $\tilde{p}(x)$. Training proceeds by matching the learned score function to the true score, which can be estimated from data without knowing the underlying density.
-
-\textbf{Diffusion models} take this approach even further by modeling the entire generative process through a gradual denoising procedure. Instead of learning a single transformation from noise to data (as in normalizing flows), diffusion models learn to reverse a forward noising process that gradually transforms data samples into pure noise. This approach has shown remarkable success in generative modeling applications and is increasingly being adapted for density estimation tasks in scientific applications.
-
-\textbf{Neural spline flows} represent a hybrid approach that maintains the invertibility requirements of normalizing flows while using more flexible and computationally efficient transformations. By parameterizing transformations as monotonic spline functions rather than general neural networks, these methods achieve a favorable balance between expressiveness and computational cost.
-
-These advanced methods reflect the field's growing sophistication in recognizing that \textbf{different inference problems may require different distributional representations}. For applications requiring exact likelihood evaluation (such as model comparison), normalizing flows remain the method of choice. For scenarios where interpretability is paramount, MDNs offer unmatched clarity. For complex, high-dimensional problems where computational efficiency is critical, score-based methods may provide the best solution.
-
-The evolution from MDNs to normalizing flows to score-based methods illustrates a broader pattern in machine learning: the progression from constrained, interpretable models to flexible, general-purpose approaches, and finally to specialized methods tailored for specific problem characteristics. In the context of SBI, this evolution has opened up new possibilities for tackling previously intractable inference problems in cosmology and other scientific domains.
 
 \section{From Density Estimation to Bayesian Inference}
 
+Neural density estimation provides the foundation, but \textbf{how do we transform learned distributions into practical Bayesian inference?} The choice of which distribution to learn—posterior $p(\theta|d)$, likelihood $p(d|\theta)$, or likelihood ratios—fundamentally shapes both computational efficiency and scientific workflow. This section examines three principal approaches: Sequential Neural Posterior Estimation (SNPE), Sequential Neural Likelihood Estimation (SNLE), and Neural Ratio Estimation (NRE).
+
+\textbf{Sequential refinement} underlies all three methods: rather than drawing simulations randomly from the prior, we iteratively focus computational resources on parameter regions most relevant for inference, dramatically improving sample efficiency when posteriors occupy small fractions of the prior volume.
+
 \subsection{Sequential Neural Posterior Estimation (SNPE)}
-Learn the posterior $p(\theta|x)$ directly using neural density estimation.
+
+SNPE learns the posterior distribution $p(\theta|d)$ directly by \textbf{reversing the simulation direction}: instead of learning the forward mapping $p(d|\theta)$ defined by our simulator, we learn the inverse $p(\theta|d)$ required for inference.
+
+Given simulation pairs $\{(\theta_i, d_i)\}_{i=1}^N$, we parameterize the posterior using a neural density estimator $q_\phi(\theta|d)$ and optimize:
+\begin{equation}
+    \phi^* = \arg\max_\phi \sum_{i=1}^N \log q_\phi(\theta_i | d_i)
+\end{equation}
+
+For sequential rounds, simulations are drawn from previous posterior approximations rather than the prior, requiring importance weighting:
+\begin{equation}
+    \mathcal{L}_r = \sum_{i=1}^{N_r} \frac{p(\theta_i)}{q_{r-1}(\theta_i|d_{\text{obs}})} \log q_\phi(\theta_i | d_i)
+\end{equation}
+
+Once trained, obtaining posterior samples requires only network forward passes, making SNPE ideal for \textbf{survey-scale applications} like analyzing thousands of galaxy cluster observations or spatial tiles in weak lensing surveys. However, learning complex posterior distributions in high-dimensional parameter spaces requires exponentially growing training data, and the network cannot leverage structural decompositions that might enable more efficient learning across different observations.
 
 \subsection{Sequential Neural Likelihood Estimation (SNLE)}
-Learn the likelihood $p(x|\theta)$ and use MCMC for posterior sampling.
+
+SNLE preserves the \textbf{modularity of Bayes' theorem} by learning the likelihood $p(d|\theta)$ in the natural simulator direction, then using MCMC for posterior sampling. This separation enables reusing learned likelihoods with different priors and scientific questions.
+
+Training follows the forward simulation direction:
+\begin{equation}
+    \phi^* = \arg\max_\phi \sum_{i=1}^N \log q_\phi(d_i | \theta_i)
+\end{equation}
+
+Inference combines the learned likelihood with arbitrary priors via MCMC:
+\begin{equation}
+    p(\theta|d_{\text{obs}}) \propto q_\phi(d_{\text{obs}}|\theta) p(\theta)
+\end{equation}
+
+A single learned likelihood can be combined with Planck CMB priors, Big Bang nucleosynthesis constraints, or different dark energy models without retraining. The approach supports \textbf{hierarchical decomposition} where separate likelihoods are learned for galaxy shapes, photometric redshifts, and shear correlations. However, MCMC cost per inference eliminates SNPE's amortization advantage, making it less suitable for rapid analysis of many datasets. The method requires high likelihood accuracy since MCMC acceptance ratios are sensitive to approximation errors.
 
 \subsection{Neural Ratio Estimation (NRE)}
-Learn likelihood ratios $r(x,\theta) = p(x|\theta) / p(x|\theta_0)$ for efficient inference.
+
+NRE recognizes that \textbf{MCMC algorithms fundamentally require likelihood ratios, not absolute densities}. By learning ratios $r(d,\theta) = p(d|\theta)/p(d|\theta_0)$ directly, NRE sidesteps normalization challenges while providing exactly the quantities needed for sampling.
+
+The approach exploits a powerful connection to \textbf{binary classification}: estimating $r(d,\theta)$ is equivalent to training a classifier to distinguish samples $(d,\theta)$ from the target distribution versus samples $(d,\theta_0)$ from a reference distribution. The optimal classifier satisfies:
+\begin{equation}
+    p(\text{class}=1|d,\theta) = \frac{r(d,\theta)}{r(d,\theta) + 1}, \quad r(d,\theta) = \frac{p(\text{class}=1|d,\theta)}{1-p(\text{class}=1|d,\theta)}
+\end{equation}
+
+MCMC then proceeds using learned ratios:
+\begin{equation}
+    \alpha(\theta' \rightarrow \theta) = \min\left(1, \frac{r(d_{\text{obs}},\theta)}{r(d_{\text{obs}},\theta')}\right)
+\end{equation}
+
+Ratio estimation typically requires \textbf{less training data} than full density modeling since classifiers only learn decision boundaries. The approach provides natural uncertainty quantification through classifier confidence and enables direct Bayes factor estimation for model comparison. However, the choice of reference parameter $\theta_0$ critically affects training efficiency and ratio accuracy. Validation becomes complex since traditional density-based diagnostics cannot be applied directly.
+
+\bigskip
+
+\textbf{Method selection guidelines}: SNPE excels for rapid, repeated inference but struggles with high-dimensional parameter spaces. SNLE provides maximum scientific flexibility but requires MCMC per analysis. NRE offers computational efficiency for high-dimensional problems but introduces reference selection complexity. Hybrid approaches increasingly combine complementary strengths of different paradigms.
 
 \section{Dimensionality Reduction for SBI}
 
-\subsection{Beyond Two-Point Functions}
-Capturing non-Gaussian information in cosmological fields requires going beyond traditional summary statistics.
+Neural density estimators scale poorly with input dimension, while cosmological surveys produce datasets with millions to billions of measurements. This \textbf{curse of dimensionality} necessitates compression that preserves parameter-constraining information while achieving computational tractability.
 
-\subsection{Compression Strategies}
-\begin{itemize}
-    \item Scattering transforms
-    \item Neural compression
-    \item Information-maximizing summaries
-\end{itemize}
+Traditional analyses compress data into two-point correlation functions by necessity—these were the only statistics with tractable likelihoods. However, this discards the non-Gaussian information that dominates constraining power in nonlinear regimes. The challenge is designing \textbf{learned compression} that preserves precisely the features relevant for parameter inference.
 
-Key principle: Preserve information relevant for inference while reducing dimensionality.
+
+Optimal compression maximizes mutual information $I(f(d), \theta)$ between compressed summaries $f(d)$ and parameters $\theta$, rather than minimizing reconstruction error. Since direct optimization is intractable, \textbf{variational mutual information maximization} (VMIM) optimizes the lower bound:
+\begin{equation}
+    I(f(d), \theta) \geq \mathbb{E}_{p(d,\theta)}[\log q_\phi(\theta|f(d))] + H(\theta)
+\end{equation}
+where $q_\phi$ approximates the true posterior.
+
+This approach learns compressions that preserve posterior structure. The data-processing inequality guarantees $I(f(d), \theta) \leq I(d, \theta)$, with equality if and only if $f(d)$ is a \textbf{sufficient statistic}—the theoretical ideal that VMIM approximates.
+
 
 \section{Robust SBI in Practice}
 
-\subsection{Key Considerations}
+The transition from theoretical SBI to reliable scientific inference presents a fundamental challenge: \textbf{neural networks are powerful function approximators, but they are not inherently trustworthy}. Unlike explicit inference where errors arise from well-understood approximations, SBI introduces approximation errors through neural network learning that can be difficult to detect and quantify. A neural density estimator might appear to perform well during training yet produce severely biased posteriors when applied to real data.
+
+This challenge becomes acute in cosmology, where inference stakes are high—our understanding of dark matter, dark energy, and fundamental physics depends on accurate parameter constraints from expensive surveys. Poorly validated SBI methods could systematically bias cosmological conclusions across multiple analyses, potentially misleading the field for years.
+
+The core insight driving robust SBI practices is that \textbf{validation must be elevated from an afterthought to a central design principle}. Traditional machine learning validation focuses on predictive accuracy, but scientific inference requires stronger guarantees: confidence that learned distributions accurately capture posterior structure, including tail behavior, correlations, and uncertainty quantification.
+
+\subsection{The Validation Imperative}
+
+\textbf{Why standard machine learning validation fails for scientific inference}: Typical machine learning cares primarily about predictive performance on test data. A neural network achieving 95\% accuracy is considered successful. However, scientific inference requires understanding the full distributional structure of uncertainty—not just point predictions.
+
+Consider an SBI method that systematically underestimates parameter uncertainties by 20\% while achieving excellent test likelihoods. The posterior modes are correct, but this bias would lead cosmologists to claim false precision, potentially causing false detections of new physics or incorrect model rejection. Traditional validation metrics miss this failure mode entirely.
+
+The fundamental issue is that \textbf{point-wise likelihood maximization does not guarantee distributional fidelity}. Networks can achieve high likelihood values while producing posteriors with incorrect variances, missing correlations, or truncated tails. These distributional errors have profound scientific consequences requiring specialized diagnostic tools.
+
+\subsubsection{Simulation-Based Calibration}
+
+The gold standard for SBI validation is \textbf{simulation-based calibration} (SBC), which tests whether learned posterior distributions are statistically consistent with the generative process. The protocol:
+
 \begin{enumerate}
-    \item \textbf{Frozen summarizers}: Keep feature extraction fixed during inference
-    \item \textbf{Sample efficiency}: Active learning and sequential strategies
-    \item \textbf{Ensemble methods}: Multiple networks for uncertainty quantification
-    \item \textbf{Validation}: Simulation-based calibration and coverage tests
+    \item \textbf{Generate calibration dataset}: Sample parameters $\tilde{\theta} \sim p(\theta)$ and observations $\tilde{d} = \mathcal{S}(\tilde{\theta})$
+    \item \textbf{Compute posterior samples}: For each $(\tilde{\theta}, \tilde{d})$ pair, obtain samples $\{\theta^{(j)}\}_{j=1}^M$ from $q(\theta|\tilde{d})$
+    \item \textbf{Calculate ranks}: For dimension $k$, compute rank $r_k = \sum_{j=1}^M \mathbb{I}[\theta^{(j)}_k < \tilde{\theta}_k]$
+    \item \textbf{Test uniformity}: Well-calibrated posteriors produce $r_k \sim \text{Uniform}(0, M)$
 \end{enumerate}
 
-\subsection{Common Pitfalls}
-\begin{itemize}
-    \item Distribution shift between simulations and real data
-    \item Model misspecification
-    \item Insufficient simulation fidelity
-\end{itemize}
+Deviations from uniformity reveal specific failures: systematic shifts indicate bias, overdispersion suggests overconfidence, underdispersion reveals underconfidence. \textbf{SBC's power lies in its model-agnostic nature}—testing the fundamental requirement that posteriors correctly represent parameter uncertainty, regardless of neural architecture.
+
+However, SBC requires significant computation. Each test demands hundreds to thousands of posterior evaluations, repeated whenever architecture, training, or simulation models change. This cost often leads practitioners to skip calibration, creating dangerous gaps between development and deployment.
+
+\subsubsection{Coverage Probability Assessment}
+
+While SBC provides a comprehensive distributional test, \textbf{coverage probability assessment} offers a complementary diagnostic that directly tests the reliability of uncertainty quantification. The fundamental principle is intuitive: if our posterior correctly captures parameter uncertainty, then credible intervals should contain the true parameter values at the stated confidence level.
+
+For any confidence level $\alpha \in (0,1)$, a well-calibrated posterior should produce credible intervals that contain the true parameter value exactly $\alpha$ fraction of the time. This seemingly simple requirement has profound implications for scientific inference, as miscalibrated intervals directly translate to incorrect uncertainty estimates in published results.
+
+The diagnostic protocol proceeds systematically. First, we compute $\alpha$-credible intervals $C_\alpha(\tilde{d}) = \{\theta : q(\theta|\tilde{d}) \geq c_\alpha\}$ for each test observation, where the threshold $c_\alpha$ is chosen such that the credible region contains probability mass $\alpha$. Next, we calculate the empirical coverage fraction $\hat{C}_\alpha = \frac{1}{N} \sum_{i=1}^N \mathbb{I}[\tilde{\theta}_i \in C_\alpha(\tilde{d}_i)]$ across all test cases. Finally, we test whether the observed coverage $\hat{C}_\alpha$ statistically agrees with the nominal level $\alpha$.
+
+Coverage tests prove particularly sensitive to \textbf{posterior tail behavior}, which often drives the most scientifically important conclusions. Consider claims of tension between different cosmological datasets or evidence for physics beyond the standard model—these frequently rely on whether parameter estimates fall within or outside credible regions. Underconfident posteriors (coverage $> \alpha$) lead to false precision claims that may result in premature announcements of new physics, while overconfident posteriors (coverage $< \alpha$) cause researchers to dismiss genuine anomalies as statistical fluctuations.
+
+\subsection{Identifying and Mitigating Common Failure Modes}
+
+Experience across multiple SBI applications has revealed characteristic failure patterns that practitioners must guard against. Understanding these failure modes and their mitigation strategies is essential for robust implementation.
+
+\subsubsection{Distribution Shift and Domain Adaptation}
+
+\textbf{SBI's fundamental assumption is that training simulations faithfully represent the data generation process for real observations}. When this breaks down—due to unmodeled systematics, incomplete physics, or computational approximations—distribution shift severely biases inference.
+
+Consider weak lensing analysis where training uses idealized galaxy shapes, but real observations include complex morphologies from blending, detection thresholds, and photometric uncertainties. The learned posterior may be precisely calibrated for simulated data but systematically biased for real observations.
+
+Several diagnostic approaches can identify these troublesome simulation-reality mismatches before they compromise scientific conclusions. \textbf{Two-sample tests} provide the most direct approach by comparing distributions of summary statistics between simulations and observations. When these tests reveal significant differences, they suggest that simulations fail to capture key aspects of the data generation process. However, this approach faces practical challenges: choosing appropriate test statistics requires deep domain expertise, and high-dimensional comparisons suffer from multiple testing corrections that can obscure subtle but important differences.
+
+\textbf{Adversarial validation} offers a more sophisticated diagnostic by training binary classifiers to distinguish between simulated and real data. High classification accuracy indicates that the datasets contain systematically different features, revealing detectable distribution shift. Conversely, random classification performance suggests distributional consistency. This approach can identify subtle shifts that escape traditional statistical tests, though careful interpretation is required to understand which specific features drive the classification decisions.
+
+Perhaps most importantly, \textbf{posterior predictive checks} provide a direct test of the entire inference pipeline's self-consistency. These checks generate synthetic observations from the learned posterior and compare them systematically to real data. Persistent discrepancies reveal either poor posterior calibration or fundamental inadequacies in the simulation models. This approach has the advantage of testing the end-to-end inference process rather than individual components.
+
+When distribution shift is detected, several mitigation strategies can restore robustness. \textbf{Domain adaptation} techniques modify the learned mappings to account for systematic differences between simulations and reality, ranging from simple reweighting schemes that adjust training sample importance to sophisticated adversarial training procedures that learn domain-invariant representations. \textbf{Robust training objectives} modify the standard maximum likelihood loss function to downweight outliers or incorporate distributional constraints, preventing the network from learning spurious correlations specific to the training simulations. Finally, \textbf{transfer learning} can significantly improve performance when computational constraints limit training data quantity by initializing SBI networks using parameters trained on related but higher-fidelity simulations, then fine-tuning on the specific problem of interest.
+
+\subsubsection{Simulator Model Misspecification}
+
+\textbf{Real astrophysical systems inevitably exhibit complexities not captured in computational simulations}, creating a fundamental challenge for simulation-based inference. Dark matter-only simulations miss the crucial effects of baryonic feedback that redistribute matter on galactic scales, finite-resolution codes cannot resolve small-scale physics like star formation and supernovae feedback, and approximate radiative transfer schemes introduce systematic errors in observational predictions. When SBI methods are trained on such misspecified simulators, they learn to infer parameters of an incorrect physical model—potentially leading to biased cosmological conclusions even when the neural network training appears successful.
+
+The challenge of model misspecification extends well beyond simple approximation errors or missing physics. Even different simulation codes implementing ostensibly identical physics can produce subtly different predictions due to variations in numerical schemes, boundary conditions, algorithmic choices, and discretization approaches. An SBI method trained exclusively on one simulation suite may systematically bias results when applied to observational data that more closely resembles the predictions from alternative simulation codes. This "simulation dependence" represents a form of systematic uncertainty that is difficult to quantify without access to multiple independent simulation frameworks.
+
+\textbf{Hierarchical uncertainty modeling} acknowledges simulator limitations by introducing uncertainty terms for unmodeled physics: $d = \mathcal{S}(\theta) + \varepsilon_{\text{model}} + \varepsilon_{\text{obs}}$, where $\varepsilon_{\text{model}}$ represents model uncertainty. The challenge is characterizing $\varepsilon_{\text{model}}$ without access to the "true" process.
+
+\textbf{Ensemble approaches} train multiple networks on different simulation suites or approximations, combining predictions to estimate model uncertainty. Variance across ensemble members provides systematic uncertainty estimates, while ensemble means often prove more robust than individual components.
+
+\subsubsection{Sample Efficiency and Active Learning}
+
+\textbf{Neural density estimators require substantial training data to achieve acceptable accuracy}, yet high-fidelity cosmological simulations represent some of the most computationally expensive scientific calculations ever undertaken. A single state-of-the-art hydrodynamical simulation incorporating realistic galaxy formation physics might require weeks of runtime on modern supercomputers, effectively limiting the total number of training samples to hundreds or thousands—orders of magnitude below the regime where neural networks typically excel. This fundamental tension between data requirements and computational resources creates a critical bottleneck for SBI deployment.
+
+The \textbf{curse of dimensionality} dramatically exacerbates this sample efficiency challenge. Traditional wisdom suggests that the number of samples required for adequate coverage grows exponentially with the dimensionality of parameter space. A realistic 20-dimensional cosmological parameter space—including dark matter properties, baryonic feedback parameters, and observational systematics—would nominally require orders of magnitude more simulations than any conceivable computational budget could provide. This scaling problem threatens to make SBI impractical for high-dimensional inference problems without methodological innovations.
+
+Fortunately, \textbf{sequential design strategies} offer a principled solution by adaptively focusing computational resources on parameter regions most relevant for inference. Rather than drawing training samples uniformly from broad prior distributions, sequential approaches iteratively refine the sampling distribution based on preliminary results from previous rounds. The procedure begins by training an initial SBI network using samples drawn from the prior, then applies this network to observational data to obtain an approximate posterior. New training samples are then drawn from neighborhoods of this approximate posterior, the network is retrained including the new samples with appropriate importance weighting to account for the non-uniform sampling, and the process iterates until convergence criteria are satisfied.
+
+These adaptive approaches can achieve order-of-magnitude improvements in sample efficiency by concentrating expensive simulations precisely where they provide maximum information for parameter inference. However, sequential design requires extremely careful implementation to avoid introducing bias through the adaptive sampling procedure—a failure mode that can be difficult to detect but leads to systematically overconfident posterior estimates. Modern \textbf{active learning criteria} provide principled methods for selecting new simulation points that maximally improve posterior estimates, using either information-theoretic approaches that target points maximizing expected information gain or uncertainty-based strategies that focus on regions where current posterior estimates remain most uncertain.
+
+\subsection{Computational Considerations and Scalability}
+
+Implementing SBI for realistic cosmological applications pushes the boundaries of computational feasibility, requiring careful engineering solutions to bridge the gap between theoretical promise and practical deployment. Modern cosmological surveys generate data at unprecedented scales—the Euclid space telescope will observe billions of galaxies, while the Vera Rubin Observatory will produce petabytes of imaging data. Simultaneously, the high-dimensional nature of both parameter spaces and data products challenges standard neural network training procedures that were designed for more modest problem scales.
+
+\subsubsection{Memory Management and Batch Processing}
+
+The scale of cosmological datasets creates immediate memory bottlenecks that standard machine learning frameworks struggle to handle. Consider weak lensing convergence maps from a typical cosmological simulation: each map might contain millions of pixels representing the projected matter distribution, while a training dataset could include thousands of such maps along with their corresponding high-dimensional parameter vectors. Attempting to load such datasets entirely into memory—as standard neural network training procedures assume—quickly becomes infeasible even on high-memory computing systems.
+
+Several engineering strategies have proven essential for large-scale SBI deployment. \textbf{Streaming data loaders} circumvent memory limitations by reading simulation outputs directly from storage during training, maintaining only small batches in memory at any given time. While this approach imposes additional I/O overhead that can slow training, careful implementation of buffering and prefetching strategies can minimize performance impacts. \textbf{Hierarchical compression} schemes store simulation data in progressively compressed formats, loading full-resolution data only when specific samples are required for training batches. This trades computational overhead for memory efficiency, often proving worthwhile for storage-limited applications. Finally, \textbf{lazy evaluation frameworks} defer expensive data transformations—such as applying observational noise or survey selection functions—until specific samples are actually required, enabling memory-efficient processing of arbitrarily large simulation suites.
+
+\subsubsection{Numerical Stability in High Dimensions}
+
+Beyond memory constraints, neural density estimation in the high-dimensional spaces typical of cosmological applications faces fundamental numerical challenges that can cause training instability, gradient explosion, or convergence to poor local minima. These issues prove particularly acute for normalizing flows, where computing log-likelihood gradients requires stable evaluation of high-dimensional Jacobian determinants—operations that are notoriously sensitive to numerical precision and can easily overflow or underflow in standard floating-point arithmetic.
+
+Modern deep learning practice has developed several \textbf{stabilization techniques} that prove essential for reliable SBI training. \textit{Spectral normalization} constrains the Lipschitz constants of neural network layers, preventing sudden changes in network behavior that can destabilize the training process and lead to gradient explosion. \textit{Early stopping criteria} monitor validation metrics to detect overfitting before it compromises generalization performance, automatically terminating training when continued optimization would hurt test performance. \textit{Learning rate scheduling} adapts optimization hyperparameters based on training progress, carefully balancing convergence speed with numerical stability to ensure robust optimization trajectories.
+
+\subsection{Uncertainty Quantification and Ensemble Methods}
+
+A fundamental challenge in deploying SBI for scientific inference lies in recognizing that \textbf{individual neural networks provide only point estimates of posterior distributions, while rigorous scientific conclusions require understanding the uncertainty in these estimates themselves}. Even when a single network appears well-calibrated during validation testing, it may systematically bias results in subtle ways that are difficult to detect without extensive testing across diverse scenarios. This "uncertainty about uncertainty" represents a crucial gap between machine learning performance metrics and scientific reliability standards.
+
+The core issue stems from the inherent limitations of point estimation in high-stakes scientific applications. Traditional neural network training produces a single set of learned parameters that represents one possible solution to the density estimation problem. However, given finite training data and model approximation errors, many different parameter configurations could achieve similar training performance while producing systematically different posterior estimates. Understanding this model uncertainty—often termed epistemic uncertainty—becomes essential for honest scientific inference that properly acknowledges the limitations of our computational methods.
+
+Ensemble methods provide the most practical approach to epistemic uncertainty quantification by training multiple networks with different random initializations, architectural choices, or training data subsets. The key insight is that the variance across ensemble member predictions provides a natural estimate of our uncertainty about the posterior distribution due to limited training data and model approximation errors. When ensemble members agree closely, we can have higher confidence in the posterior estimate; when they disagree substantially, this signals regions where our conclusions should be interpreted with greater caution.
+
+\textbf{Deep ensembles} implement this principle by training multiple networks independently and combining their predictions through averaging or more sophisticated aggregation schemes. Extensive empirical evaluation has demonstrated that this approach consistently improves calibration compared to single networks while providing uncertainty estimates that correlate well with prediction accuracy. The ensemble approach proves particularly valuable for identifying problematic regions of parameter or data space where individual networks might confidently provide incorrect estimates.
+
+\textbf{Bayesian neural networks} offer a more theoretically principled alternative by placing probability distributions over network parameters rather than learning deterministic point estimates. This approach provides theoretical guarantees about uncertainty quantification that deterministic methods cannot match, explicitly representing our epistemic uncertainty through the parameter posterior distribution. However, this theoretical elegance comes at substantial computational cost, as inference in Bayesian neural networks requires either expensive sampling procedures or complex variational approximations that can be difficult to implement and validate.
+
+The transition from traditional likelihood-based methods to simulation-based inference represents far more than a technical upgrade—it embodies a \textbf{fundamental paradigm shift toward simulation-driven science} that embraces the full complexity of cosmological physics without forcing it into analytically tractable approximations. This transformation enables cosmology to fully leverage decades of investment in sophisticated simulation codes while maintaining the rigorous statistical framework of Bayesian analysis.
+
+However, this powerful new capability comes with profound new responsibilities. The validation and uncertainty quantification challenges we have discussed require sustained attention from the cosmological community to ensure that the remarkable flexibility of modern machine learning serves the goals of robust scientific inference rather than introducing subtle biases that could mislead our understanding of the universe. The stakes are too high—and the computational investments too substantial—to deploy these methods without the comprehensive validation frameworks that scientific applications demand.
 
 \section{Practical Resources}
 
-\subsection{Software}
+\subsection{Software Frameworks}
 \begin{itemize}
-    \item \texttt{sbi}: \url{https://github.com/mackelab/sbi}
-    \item \texttt{lampe}: Likelihood-free AMortized Posterior Estimation
-    \item \texttt{pydelfi}: Density Estimation Likelihood-Free Inference
+    \item \texttt{sbi}: \url{https://github.com/mackelab/sbi} - Comprehensive Python library implementing SNPE, SNLE, and NRE with extensive validation tools
+    \item \texttt{lampe}: Likelihood-free AMortized Posterior Estimation with PyTorch backend and GPU acceleration
+    \item \texttt{pydelfi}: Density Estimation Likelihood-Free Inference with focus on normalizing flows
+    \item \texttt{sbibm}: Simulation-Based Inference Benchmark providing standardized problems for method comparison
+\end{itemize}
+
+\subsection{Specialized Tools}
+\begin{itemize}
+    \item \texttt{corner}: Posterior visualization and summary statistics
+    \item \texttt{arviz}: Bayesian inference diagnostics and visualization
+    \item \texttt{chainconsumer}: MCMC chain analysis and comparison tools
 \end{itemize}
 
 
-
-
-
-
-
-\section{Introduction}
-\label{sec:intro}
-% TODO: write your article here.
-The stage is yours. Write your article here.
-The bulk of the paper should be clearly divided into sections with short descriptive titles, including an introduction and a conclusion.
-
-
-
-\section{A Section}
-Use sections to structure your article's presentation.
-
-Equations should be centered; multi-line equations should be aligned.
-\begin{equation}
-H = \sum_{j=1}^N \left[J (S^x_j S^x_{j+1} + S^y_j S^y_{j+1} + \Delta S^z_j S^z_{j+1}) - h S^z_j \right].
-\end{equation}
-
-In the list of references, cited papers \cite{1931_Bethe_ZP_71} should include authors, title, journal reference (journal name, volume number (in bold), start page) and most importantly a DOI link. For a preprint \cite{arXiv:1108.2700}, please include authors, title (please ensure proper capitalization) and arXiv link. If you use BiBTeX with our style file, the right format will be automatically implemented.
-
-All equations and references should be hyperlinked to ensure ease of navigation. This also holds for [sub]sections: readers should be able to easily jump to Section \ref{sec:another}.
-
-\section{Another Section}
-\label{sec:another}
-There is no strict length limitation, but the authors are strongly encouraged to keep contents to the strict minimum necessary for peers to reproduce the research described in the paper.
-
-\subsection{A first subsection}
-You are free to use dividers as you see fit.
-\subsection{A note about figures}
-Figures should only occupy the stricly necessary space, in any case individually fitting on a single page. Each figure item should be appropriately labeled and accompanied by a descriptive caption. {\bf SciPost does not accept creative or promotional figures or artist's impressions}; on the other hand, technical drawings and scientifically accurate representations are encouraged.
-
-
 \section{Conclusion}
-You must include a conclusion.
 
 \section*{Acknowledgements}
 Acknowledgements should follow immediately after the conclusion.
@@ -450,23 +538,11 @@ This is optional. If desired, contributions should be succinctly described in a 
 Authors are required to provide funding information, including relevant agencies and grant numbers with linked author's initials. Correctly-provided data will be linked to funders listed in the \href{https://www.crossref.org/services/funder-registry/}{\sf Fundref registry}.
 
 
-\begin{appendix}
-\numberwithin{equation}{section}
+% \begin{appendix}
+% \numberwithin{equation}{section}
 
-\section{First appendix}
-Add material which is better left outside the main text in a series of Appendices labeled by capital letters.
-
-\section{About references}
-Your references should start with the comma-separated author list (initials + last name), the publication title in italics, the journal reference with volume in bold, start page number, publication year in parenthesis, completed by the DOI link (linking must be implemented before publication). If using BiBTeX, please use the style files provided  on \url{https://scipost.org/submissions/author_guidelines}. If you are using our LaTeX template, simply add
-\begin{verbatim}
-\bibliography{your_bibtex_file}
-\end{verbatim}
-at the end of your document. If you are not using our LaTeX template, please still use our bibstyle as
-\begin{verbatim}
-\bibliographystyle{SciPost_bibstyle}
-\end{verbatim}
-in order to simplify the production of your paper.
-\end{appendix}
+% \section{First appendix}
+% Add material which is better left outside the main text in a series of Appendices labeled by capital letters.
 
 
 %%%%%%%%% END TODO: CONTENTS
@@ -474,19 +550,7 @@ in order to simplify the production of your paper.
 
 %%%%%%%%%% TODO: BIBLIOGRAPHY
 % Provide your bibliography here. You have two options:
-
-%%% FIRST OPTION
-% Write your entries here directly, following the example below, including:
-% Author(s), Title, Journal Ref. with year in parentheses at the end, followed by the DOI number.
-
-%\begin{thebibliography}{99}
-%\bibitem{1931_Bethe_ZP_71} H. A. Bethe, {\it Zur Theorie der Metalle. i. Eigenwerte und Eigenfunktionen der linearen Atomkette}, Zeit. f{\"u}r Phys. {\bf 71}, 205 (1931), \doi{10.1007\%2FBF01341708}.
-%\bibitem{arXiv:1108.2700} P. Ginsparg, {\it It was twenty years ago today... }, \url{http://arxiv.org/abs/1108.2700}.
-%\end{thebibliography}
-
-%%% SECOND OPTION
-% Use your bibtex library, formatted by the SciPost style file.
-\bibliography{SciPost_Example_BiBTeX_File.bib}
+\bibliography{sbi.bib}
 
 %%%%%%%%%% END TODO: BIBLIOGRAPHY
 
