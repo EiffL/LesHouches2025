@@ -4,6 +4,7 @@
 
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![PDF Status](https://github.com/EiffL/LesHouches2025/actions/workflows/compile-latex.yml/badge.svg)](https://github.com/EiffL/LesHouches2025/actions/workflows/compile-latex.yml)
+[![View PDF](https://img.shields.io/badge/View-PDF-blue.svg)](https://github.com/EiffL/LesHouches2025/blob/main/notes/main.pdf)
 [![Download PDF](https://img.shields.io/badge/Download-PDF-red.svg)](https://github.com/EiffL/LesHouches2025/releases/latest/download/main.pdf)
 
 This repository contains lecture materials for a one-hour introduction to Simulation-Based Inference (SBI) in cosmology, presented at the [Dark Universe Summer School](https://indico.iap.fr/event/25/) at École de Physique des Houches, France.
