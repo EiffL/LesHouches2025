@@ -59,6 +59,22 @@ When editing or creating content for this lecture, maintain the following style:
 - **Explanatory clarifications** - helpful parenthetical remarks without repetition
 - **Comprehensive but concise** - thorough coverage while maintaining brevity
 
+### Pedagogical Structure
+- **Logic of discovery over logic of exposition** - Follow the intellectual journey that led to method development, not just final technical descriptions
+- **Motivational pedagogy** - Always establish necessity/problems before presenting solutions. Never introduce techniques without clear motivation
+- **Causal narrative structure** - Each concept should arise naturally from limitations of previous concepts. Make transitions explicit and motivated
+- **Problem-solution chains** - Structure content around explicit problem → solution → new problem → better solution sequences
+- **Reader journey mapping** - Consider what natural questions the target cosmologist audience would have and address them in logical order
+- **Intellectual evolution** - Show WHY methods were developed historically (e.g., "2-point functions became dominant BECAUSE their likelihoods were analytically tractable"), not just HOW they work
+- **Information architecture** - Present concepts in order of increasing complexity, establishing foundations before building upon them
+- **Avoid "technique catalog" writing** - Don't list methods sequentially without showing their conceptual relationships and evolutionary necessity
+
+### Strategic Bold Emphasis Guidelines
+- Bold text should create a coherent narrative when read in isolation - a reader should understand the key conceptual flow by scanning bold phrases alone
+- Use bold for key concepts, fundamental limitations, and crucial insights - NOT for paragraph headers or organizational markers
+- Strategic bold emphasis should highlight conceptual distinctions and turning points in the argument
+- Bold phrases should capture the essential logic: problem identification → methodological solutions → information costs → theoretical advances → practical limitations
+
 ## Development Workflow
 
 1. Edit LaTeX files in the `notes/` directory
