@@ -2,10 +2,14 @@
 
 **Lecture at the Dark Universe Summer School, Les Houches 2025**
 
-[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![PDF Status](https://github.com/EiffL/LesHouches2025/actions/workflows/compile-latex.yml/badge.svg)](https://github.com/EiffL/LesHouches2025/actions/workflows/compile-latex.yml)
-[![View PDF](https://img.shields.io/badge/View-PDF-blue.svg)](https://github.com/EiffL/LesHouches2025/blob/main/notes/main.pdf)
-[![Download PDF](https://img.shields.io/badge/Download-PDF-red.svg)](https://github.com/EiffL/LesHouches2025/releases/latest/download/main.pdf)
+<p align="left">
+  <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">
+    <img src="https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg" alt="License: CC BY 4.0">
+  </a>
+  <a href="https://github.com/EiffL/LesHouches2025/releases/latest/download/main.pdf" target="_blank">
+    <img src="https://img.shields.io/badge/Download-PDF-red.svg" alt="Download PDF">
+  </a>
+</p>
 
 This repository contains lecture materials for a one-hour introduction to Simulation-Based Inference (SBI) in cosmology, presented at the [Dark Universe Summer School](https://indico.iap.fr/event/25/) at École de Physique des Houches, France.
 
