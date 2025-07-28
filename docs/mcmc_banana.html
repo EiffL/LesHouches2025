@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCMC Visualization - Banana Distribution</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px;
+            max-width: 450px;
+            width: 100%;
+        }
+        .visualization-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .info-panel {
+            width: 100%;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #19375f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #2d4a7b;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .stat {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+            border-left: 4px solid #19375f;
+        }
+        .stat-label {
+            font-weight: bold;
+            color: #19375f;
+        }
+        .stat-value {
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        /* Probability Ratio Section */
+        .probability-section {
+            margin: 10px 0;
+            padding: 15px;
+            background-color: #f0f4f8;
+            border-radius: 10px;
+            border: 2px solid #19375f;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .probability-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #19375f;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .prob-value {
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+        .ratio-equals {
+            font-size: 28px;
+            margin: 0 10px;
+        }
+        .ratio-result {
+            font-size: 32px;
+            font-weight: bold;
+            color: #19375f;
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .decision {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .accept {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .reject {
+            background-color: #f44336;
+            color: white;
+        }
+        input[type="range"] {
+            width: 150px;
+        }
+        .speed-label {
+            font-size: 14px;
+            color: #666;
+        }
+        .legend {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="controls">
+            <button id="startBtn">Start MCMC</button>
+            <button id="pauseBtn" disabled>Pause</button>
+            <button id="resetBtn">Reset</button>
+            <button id="stepBtn">Single Step</button>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <span class="speed-label">Speed:</span>
+                <input type="range" id="speedSlider" min="1" max="10" value="5" style="width: 80px;">
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #feeb6d;"></div>
+                <span>Current Position θ</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #0099cc;"></div>
+                <span>Proposed Position θ'</span>
+            </div>
+        </div>
+        
+        <div class="visualization-area">
+            <canvas id="canvas" width="400" height="400"></canvas>
+            
+            <div class="info-panel">
+                <div class="probability-section">
+                    <div class="probability-title">Metropolis-Hastings Ratio</div>
+                    <div style="display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 20px 0;">
+                        <span style="margin-right: 15px;">α = </span>
+                        <div style="display: inline-block; text-align: center;">
+                            <div style="border-bottom: 2px solid #333; padding: 5px 10px;">
+                                <span class="prob-value" style="color: #0099cc;">p(θ')</span>
+                                <span style="margin: 0 10px;">=</span>
+                                <span id="probNumerator" style="color: #0099cc; font-weight: bold; font-family: monospace;">-</span>
+                            </div>
+                            <div style="padding: 5px 10px;">
+                                <span class="prob-value" style="color: #333; background-color: #feeb6d; padding: 2px 5px; border-radius: 3px;">p(θ)</span>
+                                <span style="margin: 0 10px;">=</span>
+                                <span id="probDenominator" style="color: #333; background-color: #feeb6d; padding: 2px 5px; border-radius: 3px; font-weight: bold; font-family: monospace;">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ratio-result" id="ratioResult">
+                        α = -
+                    </div>
+                </div>
+                
+                <div id="decision" class="decision" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        // MCMC parameters
+        let currentX = 0;
+        let currentY = 0;
+        let samples = [];
+        let totalSteps = 0;
+        let acceptedSteps = 0;
+        let isRunning = false;
+        let animationId = null;
+        let proposalShown = false;
+        let lastProposedX = null;
+        let lastProposedY = null;
+        
+        // Visualization parameters
+        const xMin = -3, xMax = 3;
+        const yMin = -2, yMax = 8;
+        const gridSize = 100;
+        
+        // Banana distribution (Rosenbrock-like)
+        function bananaLogPdf(x, y) {
+            const a = 1;
+            const b = 100;
+            const term1 = Math.pow(a - x, 2);
+            const term2 = b * Math.pow(y - x * x, 2);
+            return -(term1 + term2) / 20; // Scaled for visualization
+        }
+        
+        function bananaPdf(x, y) {
+            return Math.exp(bananaLogPdf(x, y));
+        }
+        
+        // Convert world coordinates to canvas coordinates
+        function worldToCanvas(x, y) {
+            const canvasX = (x - xMin) / (xMax - xMin) * width;
+            const canvasY = height - (y - yMin) / (yMax - yMin) * height;
+            return [canvasX, canvasY];
+        }
+        
+        // Draw the banana distribution heatmap
+        function drawDistribution() {
+            const imageData = ctx.createImageData(width, height);
+            const data = imageData.data;
+            
+            // Find max value for normalization
+            let maxVal = 0;
+            for (let i = 0; i < width; i += 2) {
+                for (let j = 0; j < height; j += 2) {
+                    const x = xMin + (i / width) * (xMax - xMin);
+                    const y = yMin + ((height - j) / height) * (yMax - yMin);
+                    const val = bananaPdf(x, y);
+                    if (val > maxVal) maxVal = val;
+                }
+            }
+            
+            // Draw heatmap
+            for (let i = 0; i < width; i++) {
+                for (let j = 0; j < height; j++) {
+                    const x = xMin + (i / width) * (xMax - xMin);
+                    const y = yMin + ((height - j) / height) * (yMax - yMin);
+                    const val = bananaPdf(x, y) / maxVal;
+                    
+                    const idx = (j * width + i) * 4;
+                    const intensity = val * 255;
+                    
+                    // Blue to white gradient
+                    data[idx] = 255 - (255 - 25) * val;     // R
+                    data[idx + 1] = 255 - (255 - 55) * val; // G
+                    data[idx + 2] = 255 - (255 - 95) * val; // B
+                    data[idx + 3] = 255;                     // A
+                }
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+        }
+        
+        // Draw samples
+        function drawSamples() {
+            // Draw chain history (white dots and lines)
+            if (samples.length > 1) {
+                // Draw lines connecting chain history
+                ctx.strokeStyle = '#999999';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                for (let i = 1; i < samples.length; i++) {
+                    const [x1, y1] = worldToCanvas(samples[i-1][0], samples[i-1][1]);
+                    const [x2, y2] = worldToCanvas(samples[i][0], samples[i][1]);
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                }
+                ctx.stroke();
+                
+                // Draw chain history points (white dots)
+                samples.forEach((sample, idx) => {
+                    const [x, y] = worldToCanvas(sample[0], sample[1]);
+                    ctx.fillStyle = '#999999';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                    ctx.fill();
+                });
+            }
+            
+            // Draw line from last history point to current position
+            if (samples.length > 0) {
+                const [lastX, lastY] = worldToCanvas(samples[samples.length-1][0], samples[samples.length-1][1]);
+                const [currX, currY] = worldToCanvas(currentX, currentY);
+                ctx.strokeStyle = '#999999';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(currX, currY);
+                ctx.stroke();
+            }
+            
+            // Always draw current position (CNRS yellow)
+            const [x, y] = worldToCanvas(currentX, currentY);
+            ctx.fillStyle = '#feeb6d';
+            ctx.strokeStyle = '#333333';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(x, y, 10, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Label
+            ctx.fillStyle = '#333333';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('θ', x + 15, y - 10);
+            
+            // Draw proposed position if it exists (CNRS blue) 
+            if (proposalShown && lastProposedX !== null && lastProposedY !== null) {
+                const [px, py] = worldToCanvas(lastProposedX, lastProposedY);
+                ctx.fillStyle = '#0099cc';
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(px, py, 10, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Label
+                ctx.fillStyle = '#0099cc';
+                ctx.font = 'bold 16px Arial';
+                ctx.fillText("θ'", px + 15, py - 10);
+                
+                // Draw arrow from current to proposed
+                ctx.strokeStyle = '#666666';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(px, py);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+        
+        // Format probability value for display
+        function formatProbability(val) {
+            if (val < 0.0001) return val.toExponential(2);
+            if (val < 0.01) return val.toFixed(4);
+            return val.toFixed(3);
+        }
+        
+        // Metropolis-Hastings step - show proposal and calculate ratio
+        function showProposal() {
+            // Propose new position
+            const proposalStd = 0.5;
+            const proposedX = currentX + (Math.random() - 0.5) * 2 * proposalStd;
+            const proposedY = currentY + (Math.random() - 0.5) * 2 * proposalStd;
+            
+            lastProposedX = proposedX;
+            lastProposedY = proposedY;
+            proposalShown = true;
+            
+            // Calculate probabilities
+            const currentP = bananaPdf(currentX, currentY);
+            const proposedP = bananaPdf(proposedX, proposedY);
+            const ratio = proposedP / currentP;
+            const acceptanceProb = Math.min(1, ratio);
+            
+            // Update UI with actual probability values
+            // document.getElementById('proposedPos').textContent = 
+            //     `[${proposedX.toFixed(2)}, ${proposedY.toFixed(2)}]`;
+            
+            // Update probability display
+            document.getElementById('probNumerator').textContent = formatProbability(proposedP);
+            document.getElementById('probDenominator').textContent = formatProbability(currentP);
+            document.getElementById('ratioResult').textContent = 
+                `α = ${ratio > 100 ? ratio.toExponential(2) : ratio.toFixed(3)}`;
+            
+            // Show acceptance threshold immediately
+            const acceptanceThreshold = Math.min(1, acceptanceProb);
+            const decision = document.getElementById('decision');
+            decision.innerHTML = `Will accept if uniform(0,1) < ${acceptanceThreshold.toFixed(3)}`;
+            decision.className = 'decision';
+            decision.style.backgroundColor = '#e0e0e0';
+            decision.style.color = '#333';
+            decision.style.display = 'block';
+            
+            // Show both points with ratio calculation
+            drawDistribution();
+            drawSamples();
+            
+            // Return decision parameters for later use
+            return {proposedX, proposedY, acceptanceProb};
+        }
+        
+        // Dice roll animation
+        function animateDiceRoll() {
+            const decision = document.getElementById('decision');
+            decision.innerHTML = '🎲 <span id="diceValue">?</span>';
+            decision.className = 'decision';
+            decision.style.backgroundColor = '#e0e0e0';
+            decision.style.color = '#333';
+            decision.style.display = 'block';
+            
+            const diceValue = document.getElementById('diceValue');
+            
+            // Animate dice roll
+            let rolls = 0;
+            const maxRolls = 8;
+            const rollInterval = setInterval(() => {
+                diceValue.textContent = Math.random().toFixed(3);
+                rolls++;
+                
+                if (rolls >= maxRolls) {
+                    clearInterval(rollInterval);
+                }
+            }, 150);
+            
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    clearInterval(rollInterval);
+                    resolve();
+                }, maxRolls * 150);
+            });
+        }
+        
+        // Make accept/reject decision and update position
+        async function makeDecision(proposedX, proposedY, acceptanceProb) {
+            // Start dice roll animation
+            await animateDiceRoll();
+            
+            const randomU = Math.random();
+            const accept = randomU < acceptanceProb;
+            
+            // Show final dice value
+            document.getElementById('diceValue').textContent = randomU.toFixed(3);
+            
+            totalSteps++;
+            
+            // Brief pause to show final dice value
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (accept) {
+                // Show decision
+                const decision = document.getElementById('decision');
+                decision.innerHTML = `ACCEPTED<br><span style="font-size: 16px;">u = ${randomU.toFixed(3)} < ${acceptanceProb.toFixed(3)}</span>`;
+                decision.className = 'decision accept';
+                decision.style.display = 'block';
+                
+                // Redraw to show decision
+                drawDistribution();
+                drawSamples();
+                
+                // Wait a bit, then move position
+                setTimeout(() => {
+                    // Add OLD current position to chain history (white dots)
+                    samples.push([currentX, currentY]);
+                    
+                    // Move current position to proposed position (blue becomes yellow)
+                    currentX = proposedX;
+                    currentY = proposedY;
+                    acceptedSteps++;
+                    
+                    // Update statistics
+                    // document.getElementById('currentPos').textContent = 
+                    //     `[${currentX.toFixed(2)}, ${currentY.toFixed(2)}]`;
+                    // document.getElementById('acceptedSteps').textContent = 
+                    //     `${acceptedSteps} (${(acceptedSteps/totalSteps * 100).toFixed(1)}%)`;
+                    
+                    // Clear proposal and redraw with new position
+                    proposalShown = false;
+                    lastProposedX = null;
+                    lastProposedY = null;
+                    drawDistribution();
+                    drawSamples();
+                }, 500);
+                
+            } else {
+                // Show decision (current position stays the same)
+                const decision = document.getElementById('decision');
+                decision.innerHTML = `REJECTED<br><span style="font-size: 16px;">u = ${randomU.toFixed(3)} ≥ ${acceptanceProb.toFixed(3)}</span>`;
+                decision.className = 'decision reject';
+                decision.style.display = 'block';
+                
+                // Redraw to show decision
+                drawDistribution();
+                drawSamples();
+            }
+            
+            // Update step count
+            // document.getElementById('totalSteps').textContent = totalSteps;
+            
+            return accept;
+        }
+        
+        // Animation loop
+        async function animate() {
+            if (!isRunning) return;
+            
+            // Step 1: Show current yellow point only (clear any proposal)
+            proposalShown = false;
+            lastProposedX = null;
+            lastProposedY = null;
+            drawDistribution();
+            drawSamples();
+            
+            await new Promise(resolve => setTimeout(resolve, 400)); // Brief pause
+            if (!isRunning) return;
+            
+            // Step 2: Show proposal and calculate ratio
+            const params = showProposal();
+            
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Time to see proposal and ratio
+            if (!isRunning) return;
+            
+            // Step 3: Make decision with dice roll animation
+            await makeDecision(params.proposedX, params.proposedY, params.acceptanceProb);
+            
+            // Step 4: Schedule next step 
+            const speed = 11 - document.getElementById('speedSlider').value;
+            await new Promise(resolve => setTimeout(resolve, speed * 100 + 800));
+            
+            if (isRunning) {
+                animate();
+            }
+        }
+        
+        // Initialize
+        function init() {
+            currentX = 0;
+            currentY = 0;
+            samples = []; // Empty chain history at start
+            totalSteps = 0;
+            acceptedSteps = 0;
+            isRunning = false;
+            proposalShown = false;
+            lastProposedX = null;
+            lastProposedY = null;
+            
+            // document.getElementById('currentPos').textContent = '[0.00, 0.00]';
+            // document.getElementById('proposedPos').textContent = '[-, -]';
+            // document.getElementById('totalSteps').textContent = '0';
+            // document.getElementById('acceptedSteps').textContent = '0 (0.0%)';
+            document.getElementById('probNumerator').textContent = '-';
+            document.getElementById('probDenominator').textContent = '-';
+            document.getElementById('ratioResult').textContent = 'α = -';
+            document.getElementById('decision').style.display = 'none';
+            
+            drawDistribution();
+            drawSamples();
+        }
+        
+        // Event listeners
+        document.getElementById('startBtn').addEventListener('click', () => {
+            isRunning = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            animate();
+        });
+        
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            isRunning = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+        });
+        
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            isRunning = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            init();
+        });
+        
+        document.getElementById('stepBtn').addEventListener('click', async () => {
+            if (!isRunning) {
+                // Clear any previous proposal
+                proposalShown = false;
+                lastProposedX = null;
+                lastProposedY = null;
+                drawDistribution();
+                drawSamples();
+                
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                // Show proposal and ratio calculation
+                const params = showProposal();
+                
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Make decision with dice roll
+                await makeDecision(params.proposedX, params.proposedY, params.acceptanceProb);
+            }
+        });
+        
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
