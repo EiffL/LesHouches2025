@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maximum Likelihood Estimation - Gaussian Fit to Banana Distribution</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #111111;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background-color: #1a1a1a;
+            border-radius: 10px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.8);
+            padding: 20px;
+            max-width: 1000px;
+            width: 100%;
+        }
+        .visualization-area {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 5px;
+        }
+        canvas {
+            border: 1px solid #333333;
+            border-radius: 5px;
+        }
+        .info-panel {
+            flex: 1;
+            padding: 15px;
+            background-color: #222222;
+            border-radius: 5px;
+            min-width: 300px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #2a4a7a;
+            color: #f0f0f0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #3b5f9f;
+        }
+        button:disabled {
+            background-color: #333333;
+            color: #666666;
+            cursor: not-allowed;
+        }
+        .stat {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #2a2a2a;
+            border-radius: 5px;
+            border-left: 4px solid #3b5f9f;
+        }
+        .stat-label {
+            font-weight: bold;
+            color: #5a8fdf;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-family: monospace;
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+        .likelihood-display {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #1a1a1a;
+            border-radius: 10px;
+            border: 2px solid #3b5f9f;
+            text-align: center;
+        }
+        .likelihood-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #5a8fdf;
+            margin-bottom: 15px;
+        }
+        .likelihood-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+        }
+        input[type="range"] {
+            width: 150px;
+            height: 6px;
+            background: #333333;
+            outline: none;
+            border-radius: 3px;
+            -webkit-appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #5a8fdf;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #5a8fdf;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .speed-label {
+            font-size: 14px;
+            color: #a0a0a0;
+        }
+        .legend {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #e0e0e0;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #333333;
+            box-shadow: 0 1px 3px rgba(255,255,255,0.2);
+        }
+        .matrix-display {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #e0e0e0;
+            white-space: pre;
+            line-height: 1.4;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="controls">
+            <button id="startBtn">Start Optimization</button>
+            <button id="pauseBtn" disabled>Pause</button>
+            <button id="resetBtn">Reset</button>
+            <button id="stepBtn">Single Step</button>
+            <div style="margin-left: auto;">
+                <span class="speed-label">Animation Speed:</span>
+                <input type="range" id="speedSlider" min="1" max="10" value="5">
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FFAA7F;"></div>
+                <span>Data Samples</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #7fffff;"></div>
+                <span>Fitted Gaussian</span>
+            </div>
+        </div>
+        
+        <div class="visualization-area">
+            <canvas id="canvas" width="500" height="500"></canvas>
+            
+            <div class="info-panel">
+                <div class="likelihood-display">
+                    <div class="likelihood-title">Negative Log-Likelihood</div>
+                    <div class="likelihood-value" id="nllValue">-</div>
+                </div>
+                
+                <div class="stat">
+                    <div class="stat-label">Gaussian Mean μ</div>
+                    <div class="stat-value" id="meanValue">[-, -]</div>
+                </div>
+                
+                <div class="stat">
+                    <div class="stat-label">Covariance Matrix Σ</div>
+                    <div class="stat-value matrix-display" id="covValue">⎡ -    - ⎤
+⎣ -    - ⎦</div>
+                </div>
+                
+                <div class="stat">
+                    <div class="stat-label">Optimization Step</div>
+                    <div class="stat-value" id="stepValue">0</div>
+                </div>
+                
+                <div class="stat">
+                    <div class="stat-label">Learning Rate</div>
+                    <div class="stat-value" id="lrValue">0.001</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let canvas, ctx, width, height;
+        
+        // Get canvas when DOM is ready
+        function setupCanvas() {
+            canvas = document.getElementById('canvas');
+            if (!canvas) {
+                console.error('Canvas element not found');
+                return false;
+            }
+            ctx = canvas.getContext('2d');
+            width = canvas.width;
+            height = canvas.height;
+            return true;
+        }
+        
+        // Visualization parameters
+        const xMin = 0.2, xMax = 0.5;   // Ωₘ range
+        const yMin = 0.6, yMax = 1.0;   // σ₈ range
+        
+        // Optimization state
+        let samples = [];
+        let step = 0;
+        let isRunning = false;
+        
+        // TensorFlow.js variables for optimization
+        let mean, logSigma1, logSigma2, rhoLogit; // Parameters: mean and covariance parameterization
+        let optimizer;
+        
+        // Current values for visualization
+        let currentMean = [0.35, 0.8];
+        let currentCov = [[0.01, 0], [0, 0.01]];
+        
+        // Weak lensing banana distribution (same as MCMC visualization)
+        function bananaLogPdf(x, y) {
+            const omega_m_center = 0.3;
+            const sigma_8_center = 0.8;
+            const alpha = 0.5;
+            const degeneracy_curve = sigma_8_center * Math.pow(omega_m_center / x, alpha);
+            
+            const dy_perp = y - degeneracy_curve;
+            const dx = x - omega_m_center;
+            
+            const sigma_perp = 0.025;
+            const sigma_parallel = 0.12;
+            
+            const chi2_perp = Math.pow(dy_perp / sigma_perp, 2);
+            const chi2_parallel = Math.pow(dx / sigma_parallel, 2);
+            
+            let logpdf = -0.5 * (chi2_perp + 0.3 * chi2_parallel);
+            
+            // Tapering at edges
+            const edge_buffer = 0.08;
+            const taper_strength = 500;
+            
+            if (x < xMin + edge_buffer) {
+                const distance_from_edge = xMin + edge_buffer - x;
+                logpdf -= taper_strength * distance_from_edge * distance_from_edge;
+            }
+            if (x > xMax - edge_buffer) {
+                const distance_from_edge = x - (xMax - edge_buffer);
+                logpdf -= taper_strength * distance_from_edge * distance_from_edge;
+            }
+            if (y < yMin + edge_buffer) {
+                const distance_from_edge = yMin + edge_buffer - y;
+                logpdf -= taper_strength * distance_from_edge * distance_from_edge;
+            }
+            if (y > yMax - edge_buffer) {
+                const distance_from_edge = y - (yMax - edge_buffer);
+                logpdf -= taper_strength * distance_from_edge * distance_from_edge;
+            }
+            
+            return logpdf;
+        }
+        
+        function bananaPdf(x, y) {
+            return Math.exp(bananaLogPdf(x, y));
+        }
+        
+        // Sample from banana distribution using rejection sampling
+        function sampleFromBanana() {
+            while (true) {
+                const x = Math.random() * (xMax - xMin) + xMin;
+                const y = Math.random() * (yMax - yMin) + yMin;
+                const pdf = bananaPdf(x, y);
+                
+                // Find approximate max for rejection sampling
+                if (Math.random() < pdf / 0.2) {
+                    return [x, y];
+                }
+            }
+        }
+        
+        // Generate samples
+        function generateSamples(n) {
+            samples = [];
+            for (let i = 0; i < n; i++) {
+                samples.push(sampleFromBanana());
+            }
+        }
+        
+        // Convert world coordinates to canvas coordinates
+        function worldToCanvas(x, y) {
+            const canvasX = (x - xMin) / (xMax - xMin) * width;
+            const canvasY = height - (y - yMin) / (yMax - yMin) * height;
+            return [canvasX, canvasY];
+        }
+        
+        // Initialize TensorFlow.js parameters
+        function initializeParams() {
+            // Initialize mean
+            mean = tf.variable(tf.tensor1d([0.35, 0.8]));
+            
+            // Initialize covariance parameters
+            // Parameterize covariance as:
+            // Σ = [[σ1², ρσ1σ2], [ρσ1σ2, σ2²]]
+            // where ρ = tanh(rho_logit) to ensure |ρ| < 1
+            logSigma1 = tf.variable(tf.scalar(Math.log(0.1))); // log(σ1)
+            logSigma2 = tf.variable(tf.scalar(Math.log(0.1))); // log(σ2)
+            rhoLogit = tf.variable(tf.scalar(0.0)); // unconstrained correlation parameter
+            
+            // Create optimizer
+            optimizer = tf.train.adam(0.01);
+        }
+        
+        // Compute negative log-likelihood using TensorFlow.js
+        function computeNLL() {
+            return tf.tidy(() => {
+                // Convert samples to tensor
+                const samplesTensor = tf.tensor2d(samples);
+                const n = samples.length;
+                
+                // Compute covariance matrix elements with bounds
+                const sigma1 = tf.clipByValue(tf.exp(logSigma1), 1e-4, 1.0); // Bounded standard deviations
+                const sigma2 = tf.clipByValue(tf.exp(logSigma2), 1e-4, 1.0);
+                const sigma1sq = tf.square(sigma1);
+                const sigma2sq = tf.square(sigma2);
+                const rho = tf.tanh(rhoLogit); // Constrain correlation to (-1, 1)
+                const cov12 = tf.mul(tf.mul(rho, sigma1), sigma2);
+                
+                // Compute determinant of covariance with numerical stability
+                const detCov = tf.sub(tf.mul(sigma1sq, sigma2sq), tf.square(cov12));
+                const stableDetCov = tf.maximum(detCov, 1e-8); // Ensure positive determinant
+                const logDetCov = tf.log(stableDetCov);
+                
+                // Compute inverse covariance (precision) elements
+                const invDet = tf.div(1.0, stableDetCov);
+                const prec11 = tf.mul(sigma2sq, invDet);
+                const prec22 = tf.mul(sigma1sq, invDet);
+                const prec12 = tf.mul(tf.neg(cov12), invDet);
+                
+                // Compute quadratic form: (x - μ)ᵀ Σ⁻¹ (x - μ)
+                const diff = tf.sub(samplesTensor, mean); // [n, 2]
+                const diff1 = tf.slice(diff, [0, 0], [n, 1]); // [n, 1]
+                const diff2 = tf.slice(diff, [0, 1], [n, 1]); // [n, 1]
+                
+                const quadForm = tf.add(
+                    tf.add(
+                        tf.mul(tf.square(diff1), prec11),
+                        tf.mul(tf.square(diff2), prec22)
+                    ),
+                    tf.mul(tf.mul(tf.mul(2.0, diff1), diff2), prec12)
+                );
+                
+                // Negative log-likelihood
+                // NLL = 0.5 * [quadForm + log((2π)^k |Σ|)] where k=2 (dimensions)
+                const logTwoPiSquared = Math.log(Math.pow(2 * Math.PI, 2));
+                const nll = tf.div(
+                    tf.sum(tf.add(
+                        tf.mul(0.5, tf.squeeze(quadForm)),
+                        tf.mul(0.5, tf.add(logTwoPiSquared, logDetCov))
+                    )),
+                    n
+                );
+                
+                return nll;
+            });
+        }
+        
+        // Single optimization step
+        async function optimizationStep() {
+            await optimizer.minimize(() => computeNLL());
+            
+            // Update current values for visualization
+            const meanValues = await mean.array();
+            currentMean = meanValues;
+            
+            // Compute covariance matrix from parameters with bounds
+            const sigma1Val = Math.min(1.0, Math.max(1e-4, Math.exp(await logSigma1.array())));
+            const sigma2Val = Math.min(1.0, Math.max(1e-4, Math.exp(await logSigma2.array())));
+            const rhoVal = Math.tanh(await rhoLogit.array()); // Apply tanh constraint
+            
+            currentCov = [
+                [sigma1Val * sigma1Val, rhoVal * sigma1Val * sigma2Val],
+                [rhoVal * sigma1Val * sigma2Val, sigma2Val * sigma2Val]
+            ];
+            
+            step++;
+        }
+        
+        // Draw the background distribution
+        function drawDistribution() {
+            const imageData = ctx.createImageData(width, height);
+            const data = imageData.data;
+            
+            // Find max value for normalization
+            let maxVal = 0;
+            for (let i = 0; i < width; i += 2) {
+                for (let j = 0; j < height; j += 2) {
+                    const x = xMin + (i / width) * (xMax - xMin);
+                    const y = yMin + ((height - j) / height) * (yMax - yMin);
+                    const val = bananaPdf(x, y);
+                    if (val > maxVal) maxVal = val;
+                }
+            }
+            
+            // Draw heatmap
+            for (let i = 0; i < width; i++) {
+                for (let j = 0; j < height; j++) {
+                    const x = xMin + (i / width) * (xMax - xMin);
+                    const y = yMin + ((height - j) / height) * (yMax - yMin);
+                    const val = bananaPdf(x, y) / maxVal;
+                    
+                    const idx = (j * width + i) * 4;
+                    
+                    // Dark to purple/blue gradient
+                    data[idx] = 26 + val * 100;      // R
+                    data[idx + 1] = 26 + val * 80;   // G
+                    data[idx + 2] = 26 + val * 200;  // B
+                    data[idx + 3] = 255;              // A
+                }
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+        }
+        
+        // Draw Gaussian contours
+        function drawGaussianContours() {
+            ctx.strokeStyle = '#7fffff';
+            ctx.lineWidth = 2;
+            
+            // Use current covariance for visualization
+            const gaussianCov = currentCov;
+            const det = currentCov[0][0] * currentCov[1][1] - currentCov[0][1] * currentCov[1][0];
+            const invCov = [
+                [currentCov[1][1] / det, -currentCov[0][1] / det],
+                [-currentCov[1][0] / det, currentCov[0][0] / det]
+            ];
+            
+            // Draw 1-sigma and 2-sigma contours
+            for (const sigma of [1, 2]) {
+                ctx.globalAlpha = sigma === 1 ? 1.0 : 0.5;
+                ctx.beginPath();
+                
+                for (let angle = 0; angle <= 2 * Math.PI; angle += 0.1) {
+                    const cos_a = Math.cos(angle);
+                    const sin_a = Math.sin(angle);
+                    
+                    // Find the point on the ellipse
+                    const scale = sigma * Math.sqrt(2);
+                    
+                    // Transform unit circle to ellipse
+                    const a = invCov[0][0];
+                    const b = invCov[0][1] + invCov[1][0];
+                    const c = invCov[1][1];
+                    
+                    const denominator = Math.sqrt(a * cos_a * cos_a + b * cos_a * sin_a + c * sin_a * sin_a);
+                    const r = scale / denominator;
+                    
+                    const x = currentMean[0] + r * cos_a;
+                    const y = currentMean[1] + r * sin_a;
+                    
+                    const [canvasX, canvasY] = worldToCanvas(x, y);
+                    
+                    if (angle === 0) {
+                        ctx.moveTo(canvasX, canvasY);
+                    } else {
+                        ctx.lineTo(canvasX, canvasY);
+                    }
+                }
+                
+                ctx.closePath();
+                ctx.stroke();
+            }
+            
+            ctx.globalAlpha = 1.0;
+            
+            // Draw mean
+            const [meanX, meanY] = worldToCanvas(currentMean[0], currentMean[1]);
+            ctx.fillStyle = '#7fffff';
+            ctx.beginPath();
+            ctx.arc(meanX, meanY, 6, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+        
+        // Draw samples
+        function drawSamples() {
+            ctx.fillStyle = '#FFAA7F';
+            ctx.strokeStyle = '#1a1a1a';
+            ctx.lineWidth = 1;
+            
+            for (const sample of samples) {
+                const [x, y] = worldToCanvas(sample[0], sample[1]);
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+        
+        // Update UI
+        async function updateUI() {
+            try {
+                if (mean && samples.length > 0) {
+                    // Compute NLL for display
+                    const nllTensor = computeNLL();
+                    const nllValue = await nllTensor.array();
+                    nllTensor.dispose();
+                    
+                    document.getElementById('nllValue').textContent = nllValue.toFixed(4);
+                } else {
+                    document.getElementById('nllValue').textContent = '-';
+                }
+                
+                document.getElementById('meanValue').textContent = 
+                    `[${currentMean[0].toFixed(3)}, ${currentMean[1].toFixed(3)}]`;
+                
+                // Format covariance matrix
+                const covStr = `⎡ ${currentCov[0][0].toFixed(4)}  ${currentCov[0][1].toFixed(4)} ⎤\n` +
+                              `⎣ ${currentCov[1][0].toFixed(4)}  ${currentCov[1][1].toFixed(4)} ⎦`;
+                document.getElementById('covValue').textContent = covStr;
+                
+                document.getElementById('stepValue').textContent = step;
+                document.getElementById('lrValue').textContent = optimizer ? optimizer.learningRate.toFixed(4) : '0.0100';
+            } catch (error) {
+                console.error('Error updating UI:', error);
+            }
+        }
+        
+        // Main visualization update
+        function draw() {
+            drawDistribution();
+            drawGaussianContours();
+            drawSamples();
+            updateUI().catch(console.error);
+        }
+        
+        // Animation loop
+        async function animate() {
+            if (!isRunning) return;
+            
+            await optimizationStep();
+            
+            // Lower learning rate every 100 steps
+            if (step % 100 === 0 && step > 0) {
+                const currentLR = optimizer.learningRate;
+                optimizer.learningRate = currentLR * 0.9;
+            }
+            
+            draw();
+            
+            const speed = 11 - document.getElementById('speedSlider').value;
+            setTimeout(() => {
+                if (isRunning) {
+                    animate();
+                }
+            }, speed * 20);
+        }
+        
+        // Initialize
+        async function init() {
+            if (!setupCanvas()) {
+                console.error('Failed to setup canvas');
+                return;
+            }
+            
+            step = 0;
+            generateSamples(50);
+            
+            // Dispose of old variables if they exist
+            if (mean) mean.dispose();
+            if (logSigma1) logSigma1.dispose();
+            if (logSigma2) logSigma2.dispose();
+            if (rhoLogit) rhoLogit.dispose();
+            
+            // Initialize TensorFlow variables
+            initializeParams();
+            
+            // Get initial values
+            currentMean = await mean.array();
+            const sigma1Val = Math.min(1.0, Math.max(1e-4, Math.exp(await logSigma1.array())));
+            const sigma2Val = Math.min(1.0, Math.max(1e-4, Math.exp(await logSigma2.array())));
+            const rhoVal = Math.tanh(await rhoLogit.array()); // Apply tanh constraint
+            
+            currentCov = [
+                [sigma1Val * sigma1Val, rhoVal * sigma1Val * sigma2Val],
+                [rhoVal * sigma1Val * sigma2Val, sigma2Val * sigma2Val]
+            ];
+            
+            isRunning = false;
+            draw();
+        }
+        
+        // Event listeners
+        document.getElementById('startBtn').addEventListener('click', () => {
+            isRunning = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            animate();
+        });
+        
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            isRunning = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+        });
+        
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            isRunning = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            init();
+        });
+        
+        document.getElementById('stepBtn').addEventListener('click', async () => {
+            if (!isRunning) {
+                await optimizationStep();
+                draw();
+            }
+        });
+        
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', async () => {
+            console.log('Initializing visualization...');
+            try {
+                await tf.ready();
+                console.log('TensorFlow.js ready');
+                await init();
+                console.log('Initialization complete');
+            } catch (error) {
+                console.error('Initialization error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
