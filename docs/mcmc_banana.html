@@ -9,15 +9,15 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 10px;
-            background-color: white;
+            background-color: #111111;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
         .container {
-            background-color: white;
+            background-color: #1a1a1a;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.8);
             padding: 20px;
             max-width: 1000px;
             width: 100%;
@@ -28,13 +28,13 @@
             margin-bottom: 5px;
         }
         canvas {
-            border: 1px solid #ddd;
+            border: 1px solid #333333;
             border-radius: 5px;
         }
         .info-panel {
             flex: 1;
             padding: 15px;
-            background-color: #f8f8f8;
+            background-color: #222222;
             border-radius: 5px;
             min-width: 300px;
         }
@@ -46,30 +46,31 @@
         }
         button {
             padding: 8px 16px;
-            background-color: #19375f;
-            color: white;
+            background-color: #2a4a7a;
+            color: #f0f0f0;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
         }
         button:hover {
-            background-color: #2d4a7b;
+            background-color: #3b5f9f;
         }
         button:disabled {
-            background-color: #ccc;
+            background-color: #333333;
+            color: #666666;
             cursor: not-allowed;
         }
         .stat {
             margin: 10px 0;
             padding: 10px;
-            background-color: white;
+            background-color: #2a2a2a;
             border-radius: 5px;
-            border-left: 4px solid #19375f;
+            border-left: 4px solid #3b5f9f;
         }
         .stat-label {
             font-weight: bold;
-            color: #19375f;
+            color: #5a8fdf;
         }
         .stat-value {
             font-family: monospace;
@@ -80,9 +81,9 @@
         .probability-section {
             margin: 10px 0;
             padding: 15px;
-            background-color: #f0f4f8;
+            background-color: #1a1a1a;
             border-radius: 10px;
-            border: 2px solid #19375f;
+            border: 2px solid #3b5f9f;
             min-height: 250px;
             display: flex;
             flex-direction: column;
@@ -91,7 +92,7 @@
         .probability-title {
             font-size: 18px;
             font-weight: bold;
-            color: #19375f;
+            color: #5a8fdf;
             margin-bottom: 15px;
             text-align: center;
         }
@@ -106,13 +107,13 @@
         .ratio-result {
             font-size: 32px;
             font-weight: bold;
-            color: #19375f;
+            color: #ffffff;
             text-align: center;
             margin: 20px 0;
             padding: 15px;
-            background-color: white;
+            background-color: #2a2a2a;
             border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
         
         .decision {
@@ -133,10 +134,48 @@
         }
         input[type="range"] {
             width: 150px;
+            height: 6px;
+            background: #333333;
+            outline: none;
+            border-radius: 3px;
+            -webkit-appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #5a8fdf;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #5a8fdf;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        input[type="range"]::-webkit-slider-track {
+            width: 100%;
+            height: 6px;
+            background: #333333;
+            border-radius: 3px;
+        }
+        input[type="range"]::-moz-range-track {
+            width: 100%;
+            height: 6px;
+            background: #333333;
+            border-radius: 3px;
+            border: none;
         }
         .speed-label {
             font-size: 14px;
-            color: #666;
+            color: #a0a0a0;
         }
         .legend {
             display: flex;
@@ -144,6 +183,7 @@
             justify-content: center;
             margin-bottom: 8px;
             font-size: 12px;
+            color: #e0e0e0;
         }
         .legend-item {
             display: flex;
@@ -154,8 +194,8 @@
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            border: 2px solid #333333;
+            box-shadow: 0 1px 3px rgba(255,255,255,0.2);
         }
     </style>
 </head>
@@ -175,11 +215,11 @@
         
         <div class="legend">
             <div class="legend-item">
-                <div class="legend-color" style="background-color: #6841eb;"></div>
+                <div class="legend-color" style="background-color: #FFAA7F;"></div>
                 <span>Current Position θ</span>
             </div>
             <div class="legend-item">
-                <div class="legend-color" style="background-color: #0099cc;"></div>
+                <div class="legend-color" style="background-color: #7fffff;"></div>
                 <span>Proposed Position θ'</span>
             </div>
         </div>
@@ -191,17 +231,17 @@
                 <div class="probability-section">
                     <div class="probability-title">Metropolis-Hastings Ratio</div>
                     <div style="display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 20px 0;">
-                        <span style="margin-right: 15px;">α = </span>
+                        <span style="margin-right: 15px; color: #ffffff;">α = </span>
                         <div style="display: inline-block; text-align: center;">
-                            <div style="border-bottom: 2px solid #333; padding: 5px 10px;">
-                                <span class="prob-value" style="color: #0099cc;">p(θ'|d)</span>
-                                <span style="margin: 0 10px;">=</span>
-                                <span id="probNumerator" style="color: #0099cc; font-weight: bold; font-family: monospace;">-</span>
+                            <div style="border-bottom: 2px solid #e0e0e0; padding: 5px 10px;">
+                                <span class="prob-value" style="color: #7fffff;">p(θ'|d)</span>
+                                <span style="margin: 0 10px; color: #ffffff;">=</span>
+                                <span id="probNumerator" style="color: #7fffff; font-weight: bold; font-family: monospace;">-</span>
                             </div>
                             <div style="padding: 5px 10px;">
-                                <span class="prob-value" style="color: #6841eb;">p(θ|d)</span>
-                                <span style="margin: 0 10px;">=</span>
-                                <span id="probDenominator" style="color: #6841eb; font-weight: bold; font-family: monospace;">-</span>
+                                <span class="prob-value" style="color: #FFAA7F;">p(θ|d)</span>
+                                <span style="margin: 0 10px; color: #ffffff;">=</span>
+                                <span id="probDenominator" style="color: #FFAA7F; font-weight: bold; font-family: monospace;">-</span>
                             </div>
                         </div>
                     </div>
@@ -329,11 +369,11 @@
                     const idx = (j * width + i) * 4;
                     const intensity = val * 255;
                     
-                    // Blue to white gradient
-                    data[idx] = 255 - (255 - 25) * val;     // R
-                    data[idx + 1] = 255 - (255 - 55) * val; // G
-                    data[idx + 2] = 255 - (255 - 95) * val; // B
-                    data[idx + 3] = 255;                     // A
+                    // Dark to purple/blue gradient for dark theme
+                    data[idx] = 26 + val * 100;      // R (26 -> 126)
+                    data[idx + 1] = 26 + val * 80;   // G (26 -> 106) 
+                    data[idx + 2] = 26 + val * 200;  // B (26 -> 226)
+                    data[idx + 3] = 255;              // A
                 }
             }
             
@@ -345,7 +385,7 @@
             // Draw chain history (white dots and lines)
             if (samples.length > 1) {
                 // Draw lines connecting chain history
-                ctx.strokeStyle = '#feeb6d';
+                ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
                 for (let i = 1; i < samples.length; i++) {
@@ -359,7 +399,7 @@
                 // Draw chain history points (white dots)
                 samples.forEach((sample, idx) => {
                     const [x, y] = worldToCanvas(sample[0], sample[1]);
-                    ctx.fillStyle = '#feeb6d';
+                    ctx.fillStyle = '#ffffff';
                     ctx.beginPath();
                     ctx.arc(x, y, 4, 0, 2 * Math.PI);
                     ctx.fill();
@@ -370,7 +410,7 @@
             if (samples.length > 0) {
                 const [lastX, lastY] = worldToCanvas(samples[samples.length-1][0], samples[samples.length-1][1]);
                 const [currX, currY] = worldToCanvas(currentX, currentY);
-                ctx.strokeStyle = '#feeb6d';
+                ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.moveTo(lastX, lastY);
@@ -378,10 +418,10 @@
                 ctx.stroke();
             }
             
-            // Always draw current position (CNRS yellow)
+            // Always draw current position (orange)
             const [x, y] = worldToCanvas(currentX, currentY);
-            ctx.fillStyle = '#6841eb';
-            ctx.strokeStyle = '#333333';
+            ctx.fillStyle = '#FFAA7F';
+            ctx.strokeStyle = '#1a1a1a';
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.arc(x, y, 10, 0, 2 * Math.PI);
@@ -389,15 +429,15 @@
             ctx.stroke();
             
             // Label
-            ctx.fillStyle = '#333333';
+            ctx.fillStyle = '#e0e0e0';
             ctx.font = 'bold 16px Arial';
             ctx.fillText('θ', x + 15, y - 10);
             
-            // Draw proposed position if it exists (CNRS blue) 
+            // Draw proposed position if it exists (cyan) 
             if (proposalShown && lastProposedX !== null && lastProposedY !== null) {
                 const [px, py] = worldToCanvas(lastProposedX, lastProposedY);
-                ctx.fillStyle = '#0099cc';
-                ctx.strokeStyle = '#ffffff';
+                ctx.fillStyle = '#7fffff';
+                ctx.strokeStyle = '#1a1a1a';
                 ctx.lineWidth = 3;
                 ctx.beginPath();
                 ctx.arc(px, py, 10, 0, 2 * Math.PI);
@@ -405,12 +445,12 @@
                 ctx.stroke();
                 
                 // Label
-                ctx.fillStyle = '#0099cc';
+                ctx.fillStyle = '#e0e0e0';
                 ctx.font = 'bold 16px Arial';
                 ctx.fillText("θ'", px + 15, py - 10);
                 
                 // Draw arrow from current to proposed
-                ctx.strokeStyle = '#666666';
+                ctx.strokeStyle = '#999999';
                 ctx.lineWidth = 2;
                 ctx.setLineDash([5, 5]);
                 ctx.beginPath();
@@ -460,8 +500,8 @@
             const decision = document.getElementById('decision');
             decision.innerHTML = `Will accept if uniform(0,1) < ${acceptanceThreshold.toFixed(3)}`;
             decision.className = 'decision';
-            decision.style.backgroundColor = '#e0e0e0';
-            decision.style.color = '#333';
+            decision.style.backgroundColor = '#333333';
+            decision.style.color = '#e0e0e0';
             decision.style.display = 'block';
             
             // Show both points with ratio calculation
@@ -477,8 +517,8 @@
             const decision = document.getElementById('decision');
             decision.innerHTML = '🎲 <span id="diceValue">?</span>';
             decision.className = 'decision';
-            decision.style.backgroundColor = '#e0e0e0';
-            decision.style.color = '#333';
+            decision.style.backgroundColor = '#333333';
+            decision.style.color = '#e0e0e0';
             decision.style.display = 'block';
             
             const diceValue = document.getElementById('diceValue');
